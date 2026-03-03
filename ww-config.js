@@ -1,222 +1,236 @@
 export default {
   editor: {
-    label: { en: 'GDM CMS Add' },
+    label: { en: 'GDM CMS Manager' },
     icon: 'pencil',
     customSettingsPropertiesOrder: [
-      'disableInteractions',
-      { label: 'Basic Info', isCollapsible: true, properties: ['clientsData', 'clientId', 'type', 'subtype', 'title', 'slug'] },
-      { label: 'Content', isCollapsible: true, properties: ['shortDescription', 'content', 'imagelink'] },
-      { label: 'Support', isCollapsible: true, properties: ['supportDue', 'supportStatus', 'supportTicket'] },
-      { label: 'Project', isCollapsible: true, properties: ['projectsData', 'projectIdRef'] },
-      { label: 'Form', isCollapsible: true, properties: ['submitButtonText', 'showResetButton', 'resetButtonText'] },
+      'viewMode',
+      { label: 'Data', isCollapsible: true, properties: ['cmsData', 'clientsData', 'projectsData'] },
+      { label: 'Pre-fill / Edit', isCollapsible: true, properties: ['clientId', 'type', 'subtype', 'title', 'slug', 'shortDescription', 'content', 'imagelink', 'supportDue', 'supportStatus', 'supportTicket', 'projectIdRef'] },
+      { label: 'Form settings', isCollapsible: true, properties: ['showForm', 'submitButtonText', 'showResetButton', 'resetButtonText'] },
     ],
     customStylePropertiesOrder: [
       { label: 'Card', isCollapsible: true, properties: ['cardBackgroundColor', 'cardBorderRadius', 'cardPadding'] },
       { label: 'Inputs', isCollapsible: true, properties: ['inputBackgroundColor', 'inputBorderColor', 'inputTextColor', 'inputFocusColor'] },
-      { label: 'Buttons', isCollapsible: true, properties: ['submitButtonColor', 'submitButtonTextColor', 'resetButtonColor'] },
-      { label: 'Typography', isCollapsible: true, properties: ['fontFamily', 'fontSize', 'labelColor'] },
+      { label: 'Buttons', isCollapsible: true, properties: ['accentColor', 'accentTextColor', 'dangerColor'] },
+      { label: 'Typography', isCollapsible: true, properties: ['fontFamily', 'fontSize', 'labelColor', 'textColor'] },
     ],
   },
   triggerEvents: [
     {
       name: 'onSubmit',
-      label: { en: 'On submit' },
-      event: {
-        value: {
-          title: null,
-          type: null,
-          subtype: null,
-          slug: null,
-          short_description: null,
-          content: null,
-          client_id: null,
-          imagelink: null,
-          support_due: null,
-          support_status: null,
-          support_ticket: null,
-          projectidref: null,
-        },
-      },
+      label: { en: 'On add item' },
+      event: { value: { title: null, type: null, subtype: null, slug: null, short_description: null, content: null, client_id: null, imagelink: null, support_due: null, support_status: null, support_ticket: null, projectidref: null } },
       default: true,
+    },
+    {
+      name: 'onUpdate',
+      label: { en: 'On update item' },
+      event: { value: { id: null, title: null, type: null, subtype: null, slug: null, short_description: null, content: null, client_id: null, imagelink: null, support_due: null, support_status: null, support_ticket: null, projectidref: null } },
+    },
+    {
+      name: 'onDeleteItem',
+      label: { en: 'On delete item' },
+      event: { value: { id: null, title: null } },
+    },
+    {
+      name: 'onItemClick',
+      label: { en: 'On item click (client)' },
+      event: { value: { item: null } },
     },
   ],
   properties: {
-    disableInteractions: {
-      label: { en: 'Disable interactions' },
-      type: 'OnOff',
+    viewMode: {
+      label: { en: 'View mode' },
+      type: 'TextSelect',
       section: 'settings',
-      defaultValue: false,
+      options: {
+        options: [
+          { value: 'admin', label: { en: 'Admin – Add / Edit / Delete' } },
+          { value: 'client', label: { en: 'Client – View only' } },
+        ],
+      },
+      defaultValue: 'admin',
       bindable: true,
       /* wwEditor:start */
-      bindingValidation: { type: 'boolean', tooltip: 'When true, form cannot be submitted' },
+      bindingValidation: { type: 'string', tooltip: '"admin" or "client"' },
       /* wwEditor:end */
     },
-    clientsData: {
-      label: { en: 'Clients list' },
+    cmsData: {
+      label: { en: 'CMS items (list)' },
       type: 'ObjectList',
       section: 'settings',
       bindable: true,
       defaultValue: [],
       /* wwEditor:start */
-      bindingValidation: { type: 'array', tooltip: 'List of clients for dropdown (client_record)' },
+      bindingValidation: { type: 'array', tooltip: 'List of CMS rows from Supabase' },
+      /* wwEditor:end */
+    },
+    clientsData: {
+      label: { en: 'Clients list (for dropdown)' },
+      type: 'ObjectList',
+      section: 'settings',
+      bindable: true,
+      defaultValue: [],
+      /* wwEditor:start */
+      bindingValidation: { type: 'array', tooltip: 'List of client_record rows' },
+      /* wwEditor:end */
+    },
+    projectsData: {
+      label: { en: 'Projects list (for dropdown)' },
+      type: 'ObjectList',
+      section: 'settings',
+      bindable: true,
+      defaultValue: [],
+      /* wwEditor:start */
+      bindingValidation: { type: 'array', tooltip: 'List of projects rows' },
       /* wwEditor:end */
     },
     clientId: {
-      label: { en: 'Selected client ID' },
+      label: { en: 'Default client ID' },
       type: 'Text',
       section: 'settings',
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'UUID of selected client' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill client UUID' },
       /* wwEditor:end */
     },
     type: {
-      label: { en: 'Type' },
+      label: { en: 'Default type' },
       type: 'Text',
       section: 'settings',
       options: { placeholder: 'e.g. changelog, article, documentation' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'CMS type' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill type' },
       /* wwEditor:end */
     },
     subtype: {
-      label: { en: 'Subtype' },
+      label: { en: 'Default subtype' },
       type: 'Text',
       section: 'settings',
-      options: { placeholder: 'Optional subtype' },
+      options: { placeholder: 'Optional' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'CMS subtype' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill subtype' },
       /* wwEditor:end */
     },
     title: {
-      label: { en: 'Title' },
+      label: { en: 'Default title' },
       type: 'Text',
       section: 'settings',
-      options: { placeholder: 'Article title' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'CMS title' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill title' },
       /* wwEditor:end */
     },
     slug: {
-      label: { en: 'Slug' },
+      label: { en: 'Default slug' },
       type: 'Text',
       section: 'settings',
-      options: { placeholder: 'url-friendly-slug' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'URL slug' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill slug' },
       /* wwEditor:end */
     },
     shortDescription: {
-      label: { en: 'Short description' },
+      label: { en: 'Default short description' },
       type: 'Textarea',
       section: 'settings',
-      options: { placeholder: 'Brief summary' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Short description' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill short description' },
       /* wwEditor:end */
     },
     content: {
-      label: { en: 'Content' },
+      label: { en: 'Default content' },
       type: 'Textarea',
       section: 'settings',
-      options: { placeholder: 'Full content' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Main content' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill content' },
       /* wwEditor:end */
     },
     imagelink: {
-      label: { en: 'Image link' },
+      label: { en: 'Default image link' },
       type: 'Text',
       section: 'settings',
-      options: { placeholder: 'https://...' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Image URL' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill image URL' },
       /* wwEditor:end */
     },
     supportDue: {
-      label: { en: 'Support due date' },
+      label: { en: 'Default support due date' },
       type: 'Text',
       section: 'settings',
       options: { placeholder: 'YYYY-MM-DD' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Support due date' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill support due date' },
       /* wwEditor:end */
     },
     supportStatus: {
-      label: { en: 'Support status' },
+      label: { en: 'Default support status' },
       type: 'Text',
       section: 'settings',
       options: { placeholder: 'e.g. open, closed' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Support status' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill support status' },
       /* wwEditor:end */
     },
     supportTicket: {
-      label: { en: 'Support ticket' },
+      label: { en: 'Default support ticket' },
       type: 'Text',
       section: 'settings',
-      options: { placeholder: 'Ticket reference' },
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Support ticket ID' },
-      /* wwEditor:end */
-    },
-    projectsData: {
-      label: { en: 'Projects list' },
-      type: 'ObjectList',
-      section: 'settings',
-      bindable: true,
-      defaultValue: [],
-      /* wwEditor:start */
-      bindingValidation: { type: 'array', tooltip: 'List of projects for dropdown' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill support ticket' },
       /* wwEditor:end */
     },
     projectIdRef: {
-      label: { en: 'Project reference' },
+      label: { en: 'Default project reference' },
       type: 'Text',
       section: 'settings',
       bindable: true,
       defaultValue: '',
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'UUID of linked project' },
+      bindingValidation: { type: 'string', tooltip: 'Pre-fill project UUID' },
       /* wwEditor:end */
     },
+    showForm: {
+      label: { en: 'Show form by default' },
+      type: 'OnOff',
+      section: 'settings',
+      defaultValue: true,
+      hidden: (content) => content.viewMode === 'client',
+    },
     submitButtonText: {
-      label: { en: 'Submit button text' },
+      label: { en: 'Add button text' },
       type: 'Text',
       section: 'settings',
       multilang: true,
-      defaultValue: 'Add CMS Item',
+      defaultValue: 'Add Item',
       bindable: true,
-      /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Submit button label' },
-      /* wwEditor:end */
+      hidden: (content) => content.viewMode === 'client',
     },
     showResetButton: {
       label: { en: 'Show reset button' },
       type: 'OnOff',
       section: 'settings',
       defaultValue: true,
+      hidden: (content) => content.viewMode === 'client',
     },
     resetButtonText: {
       label: { en: 'Reset button text' },
@@ -225,9 +239,7 @@ export default {
       multilang: true,
       defaultValue: 'Reset',
       bindable: true,
-      /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Reset button label' },
-      /* wwEditor:end */
+      hidden: (content) => content.viewMode === 'client',
     },
     cardBackgroundColor: {
       label: { en: 'Card background' },
@@ -236,30 +248,24 @@ export default {
       defaultValue: '#ffffff',
       bindable: true,
       /* wwEditor:start */
-      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Card background color' },
+      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Card background' },
       /* wwEditor:end */
     },
     cardBorderRadius: {
       label: { en: 'Card border radius' },
       type: 'Length',
       section: 'style',
-      options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 48 }] },
+      options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 24 }] },
       defaultValue: '12px',
       bindable: true,
-      /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Border radius' },
-      /* wwEditor:end */
     },
     cardPadding: {
       label: { en: 'Card padding' },
       type: 'Length',
       section: 'style',
-      options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 64 }] },
+      options: { unitChoices: [{ value: 'px', label: 'px', min: 0, max: 48 }] },
       defaultValue: '24px',
       bindable: true,
-      /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Card padding' },
-      /* wwEditor:end */
     },
     inputBackgroundColor: {
       label: { en: 'Input background' },
@@ -292,43 +298,43 @@ export default {
       /* wwEditor:end */
     },
     inputFocusColor: {
-      label: { en: 'Input focus color' },
+      label: { en: 'Focus / accent color' },
       type: 'Color',
       section: 'style',
       defaultValue: '#0d9488',
       bindable: true,
       /* wwEditor:start */
-      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Focus ring color' },
+      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Focus ring and link color' },
       /* wwEditor:end */
     },
-    submitButtonColor: {
-      label: { en: 'Submit button color' },
+    accentColor: {
+      label: { en: 'Primary button color' },
       type: 'Color',
       section: 'style',
       defaultValue: '#0d9488',
       bindable: true,
       /* wwEditor:start */
-      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Submit button background' },
+      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Primary action button color' },
       /* wwEditor:end */
     },
-    submitButtonTextColor: {
-      label: { en: 'Submit button text' },
+    accentTextColor: {
+      label: { en: 'Primary button text' },
       type: 'Color',
       section: 'style',
       defaultValue: '#ffffff',
       bindable: true,
       /* wwEditor:start */
-      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Submit button text' },
+      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Primary button text color' },
       /* wwEditor:end */
     },
-    resetButtonColor: {
-      label: { en: 'Reset button color' },
+    dangerColor: {
+      label: { en: 'Delete button color' },
       type: 'Color',
       section: 'style',
-      defaultValue: '#64748b',
+      defaultValue: '#ef4444',
       bindable: true,
       /* wwEditor:start */
-      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Reset button color' },
+      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Delete action color' },
       /* wwEditor:end */
     },
     fontFamily: {
@@ -354,7 +360,17 @@ export default {
       defaultValue: '#475569',
       bindable: true,
       /* wwEditor:start */
-      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Label text color' },
+      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Form label color' },
+      /* wwEditor:end */
+    },
+    textColor: {
+      label: { en: 'Text color' },
+      type: 'Color',
+      section: 'style',
+      defaultValue: '#1e293b',
+      bindable: true,
+      /* wwEditor:start */
+      bindingValidation: { cssSupports: 'color', type: 'string', tooltip: 'Main text color' },
       /* wwEditor:end */
     },
   },
