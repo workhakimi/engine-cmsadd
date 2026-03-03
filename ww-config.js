@@ -46,13 +46,14 @@ export default {
       options: {
         options: [
           { value: 'admin', label: { en: 'Admin – Add / Edit / Delete' } },
-          { value: 'client', label: { en: 'Client – View only' } },
+          { value: 'client', label: { en: 'Client – Compact accordion list' } },
+          { value: 'client-scroll', label: { en: 'Client – Scroll feed (release notes)' } },
         ],
       },
       defaultValue: 'admin',
       bindable: true,
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: '"admin" or "client"' },
+      bindingValidation: { type: 'string', tooltip: '"admin", "client", or "client-scroll"' },
       /* wwEditor:end */
     },
     cmsData: {
@@ -214,7 +215,7 @@ export default {
       type: 'OnOff',
       section: 'settings',
       defaultValue: true,
-      hidden: (content) => content.viewMode === 'client',
+      hidden: (content) => content.viewMode !== 'admin',
     },
     submitButtonText: {
       label: { en: 'Add button text' },
@@ -223,14 +224,14 @@ export default {
       multilang: true,
       defaultValue: 'Add Item',
       bindable: true,
-      hidden: (content) => content.viewMode === 'client',
+      hidden: (content) => content.viewMode !== 'admin',
     },
     showResetButton: {
       label: { en: 'Show reset button' },
       type: 'OnOff',
       section: 'settings',
       defaultValue: true,
-      hidden: (content) => content.viewMode === 'client',
+      hidden: (content) => content.viewMode !== 'admin',
     },
     resetButtonText: {
       label: { en: 'Reset button text' },
@@ -239,7 +240,7 @@ export default {
       multilang: true,
       defaultValue: 'Reset',
       bindable: true,
-      hidden: (content) => content.viewMode === 'client',
+      hidden: (content) => content.viewMode !== 'admin',
     },
     cardBackgroundColor: {
       label: { en: 'Card background' },
