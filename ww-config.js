@@ -5,17 +5,29 @@ export default {
     customSettingsPropertiesOrder: [
       'viewMode',
       { label: 'Data', isCollapsible: true, properties: ['cmsData', 'clientsData', 'projectsData'] },
+      { label: 'Comments', isCollapsible: true, properties: ['showComments', 'commsData', 'usersData', 'currentUserId'] },
       { label: 'Pre-fill / Edit', isCollapsible: true, properties: ['clientId', 'type', 'subtype', 'title', 'slug', 'shortDescription', 'content', 'imagelink', 'supportDue', 'supportStatus', 'supportTicket', 'projectIdRef'] },
       { label: 'Form settings', isCollapsible: true, properties: ['showForm', 'submitButtonText', 'showResetButton', 'resetButtonText'] },
     ],
     customStylePropertiesOrder: [
       { label: 'Card', isCollapsible: true, properties: ['cardBackgroundColor', 'cardBorderRadius', 'cardPadding'] },
+      { label: 'Comments', isCollapsible: true, properties: ['commentsMaxHeight'] },
       { label: 'Inputs', isCollapsible: true, properties: ['inputBackgroundColor', 'inputBorderColor', 'inputTextColor', 'inputFocusColor'] },
       { label: 'Buttons', isCollapsible: true, properties: ['accentColor', 'accentTextColor', 'dangerColor'] },
       { label: 'Typography', isCollapsible: true, properties: ['fontFamily', 'fontSize', 'labelColor', 'textColor'] },
     ],
   },
   triggerEvents: [
+    {
+      name: 'onAddComment',
+      label: { en: 'On add comment' },
+      event: { value: { message: null, cms_id: null, user_id: null } },
+    },
+    {
+      name: 'onDeleteComment',
+      label: { en: 'On delete comment' },
+      event: { value: { id: null, message: null } },
+    },
     {
       name: 'onSubmit',
       label: { en: 'On add item' },
@@ -209,6 +221,55 @@ export default {
       /* wwEditor:start */
       bindingValidation: { type: 'string', tooltip: 'Pre-fill project UUID' },
       /* wwEditor:end */
+    },
+    showComments: {
+      label: { en: 'Enable comment section' },
+      type: 'OnOff',
+      section: 'settings',
+      defaultValue: true,
+      hidden: (content) => content.viewMode === 'admin',
+    },
+    commsData: {
+      label: { en: 'Comments data (all items)' },
+      type: 'ObjectList',
+      section: 'settings',
+      bindable: true,
+      defaultValue: [],
+      hidden: (content) => content.viewMode === 'admin' || content.showComments === false,
+      /* wwEditor:start */
+      bindingValidation: { type: 'array', tooltip: 'All comms_log rows — filtered per article by cms_id client-side' },
+      /* wwEditor:end */
+    },
+    usersData: {
+      label: { en: 'Users data (for names)' },
+      type: 'ObjectList',
+      section: 'settings',
+      bindable: true,
+      defaultValue: [],
+      hidden: (content) => content.viewMode === 'admin' || content.showComments === false,
+      /* wwEditor:start */
+      bindingValidation: { type: 'array', tooltip: 'user_record rows — used to resolve user display names' },
+      /* wwEditor:end */
+    },
+    currentUserId: {
+      label: { en: 'Current user ID' },
+      type: 'Text',
+      section: 'settings',
+      bindable: true,
+      defaultValue: '',
+      hidden: (content) => content.viewMode === 'admin' || content.showComments === false,
+      /* wwEditor:start */
+      bindingValidation: { type: 'string', tooltip: 'UUID of the logged-in user (for posting comments)' },
+      /* wwEditor:end */
+    },
+    commentsMaxHeight: {
+      label: { en: 'Comments scroll max height' },
+      type: 'Length',
+      section: 'style',
+      options: { unitChoices: [{ value: 'px', label: 'px', min: 120, max: 600 }] },
+      defaultValue: '280px',
+      bindable: true,
+      hidden: (content) => content.viewMode === 'admin' || content.showComments === false,
     },
     showForm: {
       label: { en: 'Show form by default' },
