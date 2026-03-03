@@ -1,8 +1,8 @@
 {
-  "name": "gdm-cms-add",
-  "version": "1.0.0",
+  "name": "ww-gdm-cms-add",
+  "version": "1.0.1",
   "scripts": {
-    "build": "weweb build name=gdm-cms-add type=element",
+    "build": "weweb build",
     "serve": "weweb serve"
   },
   "devDependencies": {
