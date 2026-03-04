@@ -672,6 +672,7 @@ export default {
       props, isAdmin, isClientList,
       formVisible, form, editingId,
       cmsItems, clients, projects, displayItems,
+      expandedId,
       submitLabel, resetLabel,
       toggleForm, toggleExpand, startEdit, cancelEdit, handleReset, handleSubmit, handleDelete,
       formatDate,
