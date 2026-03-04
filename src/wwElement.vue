@@ -471,9 +471,8 @@ export default {
       /* wwEditor:start */
       if (isEditionMode()) return;
       /* wwEditor:end */
-      expandedId.value = expandedId.value === item.id ? null : item.id;
       if (item._preview) return;
-      emit('trigger-event', { name: 'onItemClick', event: { value: { item } } });
+      expandedId.value = expandedId.value === item.id ? null : item.id;
     };
 
     /* ─── Display items ─── */
