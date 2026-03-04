@@ -460,11 +460,19 @@ export default {
     /* ─── Accordion expand ─── */
     const expandedId = ref(null);
 
-    const toggleExpand = (item) => {
-      expandedId.value = expandedId.value === item.id ? null : item.id;
+    const isEditionMode = () => {
       /* wwEditor:start */
-      if (props.wwEditorState?.isEditing || item._preview) return;
+      return props.wwEditorState?.editMode === wwLib?.wwEditorHelper?.EDIT_MODES?.EDITION;
       /* wwEditor:end */
+      return false; // eslint-disable-line no-unreachable
+    };
+
+    const toggleExpand = (item) => {
+      /* wwEditor:start */
+      if (isEditionMode()) return;
+      /* wwEditor:end */
+      expandedId.value = expandedId.value === item.id ? null : item.id;
+      if (item._preview) return;
       emit('trigger-event', { name: 'onItemClick', event: { value: { item } } });
     };
 
@@ -532,6 +540,9 @@ export default {
     };
 
     const toggleComments = (itemId) => {
+      /* wwEditor:start */
+      if (isEditionMode()) return;
+      /* wwEditor:end */
       if (openComments.has(itemId)) {
         openComments.delete(itemId);
       } else {
@@ -763,7 +774,7 @@ export default {
   &--preview { opacity: 0.7; }
   &--expanded .gdm-list-row__chevron { transform: rotate(180deg); }
 }
-.gdm-list-row__head { display: flex; align-items: center; gap: 0.75rem; width: 100%; padding: 0.75rem 0.25rem; background: none; border: none; cursor: pointer; text-align: left; color: inherit; font-family: inherit; font-size: inherit; transition: background 0.12s; &:hover { background: #f8fafc; } }
+.gdm-list-row__head { display: flex; align-items: center; gap: 0.75rem; width: 100%; padding: 0.75rem 0.25rem; background: none; border: none; cursor: pointer; text-align: left; color: inherit; font-family: inherit; font-size: inherit; transition: background 0.12s; pointer-events: all; &:hover { background: #f8fafc; } }
 .gdm-list-row__date { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; min-width: 6rem; flex-shrink: 0; }
 .gdm-list-row__badges { display: flex; gap: 0.3rem; flex-shrink: 0; flex-wrap: nowrap; }
 .gdm-list-row__title { flex: 1; font-size: 0.9rem; font-weight: 500; color: var(--gdm-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
@@ -813,6 +824,7 @@ export default {
   padding: 0.35rem 0;
   transition: color 0.15s;
   user-select: none;
+  pointer-events: all;
 
   &:hover { color: var(--gdm-accent); }
 }
