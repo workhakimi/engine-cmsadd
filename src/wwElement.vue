@@ -461,11 +461,10 @@ export default {
     const expandedId = ref(null);
 
     const toggleExpand = (item) => {
-      /* wwEditor:start */
-      if (props.wwEditorState?.isEditing) return;
-      /* wwEditor:end */
-      if (item._preview) return;
       expandedId.value = expandedId.value === item.id ? null : item.id;
+      /* wwEditor:start */
+      if (props.wwEditorState?.isEditing || item._preview) return;
+      /* wwEditor:end */
       emit('trigger-event', { name: 'onItemClick', event: { value: { item } } });
     };
 
@@ -525,12 +524,7 @@ export default {
     const openComments = reactive(new Set());
     const commentsRefs = {};
 
-    const isCommentOpen = (itemId) => {
-      /* wwEditor:start */
-      if (props.wwEditorState?.isEditing && itemId === 'p1') return true;
-      /* wwEditor:end */
-      return openComments.has(itemId);
-    };
+    const isCommentOpen = (itemId) => openComments.has(itemId);
 
     const scrollToBottom = (itemId) => {
       const el = commentsRefs[itemId];
@@ -538,9 +532,6 @@ export default {
     };
 
     const toggleComments = (itemId) => {
-      /* wwEditor:start */
-      if (props.wwEditorState?.isEditing) return;
-      /* wwEditor:end */
       if (openComments.has(itemId)) {
         openComments.delete(itemId);
       } else {
