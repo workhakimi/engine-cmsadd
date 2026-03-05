@@ -421,6 +421,39 @@
                 <button type="button" class="gdm-cms__btn gdm-cms__btn--ghost" @click="closeSupportExpand">Cancel</button>
               </div>
             </form>
+
+            <!-- ── Embedded comments ── -->
+            <div v-if="showComments" class="gdm-ec">
+              <button type="button" class="gdm-ec__toggle" @click.stop="toggleComments(item.id)">
+                <svg viewBox="0 0 20 20" fill="none" class="gdm-ec__toggle-icon"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <span>{{ commentCountFor(item.id) === 0 ? 'No comments yet' : commentCountFor(item.id) + (commentCountFor(item.id) === 1 ? ' comment' : ' comments') }}</span>
+                <svg class="gdm-ec__toggle-chevron" :class="{ 'gdm-ec__toggle-chevron--open': isCommentOpen(item.id) }" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div v-show="isCommentOpen(item.id)" class="gdm-ec__panel">
+                <div class="gdm-ec__scroll" :ref="(el) => { if (el) commentsRefs[item.id] = el; }">
+                  <div v-if="getItemComments(item.id).length === 0" class="gdm-ec__empty"><p>No comments yet — be the first to add one.</p></div>
+                  <div v-for="c in getItemComments(item.id)" :key="c.id" class="gdm-ec__msg" :class="{ 'gdm-ec__msg--own': isOwnComment(c), 'gdm-ec__msg--preview': c._p }">
+                    <div class="gdm-ec__avatar" :style="{ background: commentAvatarColor(c.user_id) }">{{ commentInitials(getCommentUserName(c)) }}</div>
+                    <div class="gdm-ec__msg-body">
+                      <div class="gdm-ec__msg-header">
+                        <span class="gdm-ec__author">{{ getCommentUserName(c) }}</span>
+                        <span v-if="isOwnComment(c)" class="gdm-ec__you">you</span>
+                        <span class="gdm-ec__time">{{ formatRelDate(c.created_at) }}</span>
+                        <button v-if="(isAdmin || isOwnComment(c)) && !c._p" type="button" class="gdm-ec__delete" @click="deleteComment(c)" title="Delete">✕</button>
+                      </div>
+                      <p class="gdm-ec__text">{{ c.message }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="gdm-ec__compose">
+                  <div class="gdm-ec__compose-avatar" :style="{ background: accent }">{{ currentUserInitial }}</div>
+                  <textarea v-model="newCommentFor[item.id]" class="gdm-ec__input" placeholder="Add a comment…" rows="1" @keydown.enter.exact.prevent="postComment(item)" />
+                  <button type="button" class="gdm-ec__post-btn" :disabled="!newCommentFor[item.id] || !newCommentFor[item.id].trim()" @click="postComment(item)">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -492,18 +525,54 @@
           class="gdm-st-client__ticket"
           :class="{ 'gdm-st-client__ticket--preview': item._preview }"
         >
-          <div class="gdm-st-client__ticket-left">
-            <span class="gdm-st__badge" :class="stStatusClass(item.support_status)">{{ stStatusLabel(item.support_status) }}</span>
-            <span v-if="item.support_ticket" class="gdm-st__ticket-ref">{{ item.support_ticket }}</span>
+          <!-- Row summary -->
+          <div class="gdm-st-client__ticket-row">
+            <div class="gdm-st-client__ticket-left">
+              <span class="gdm-st__badge" :class="stStatusClass(item.support_status)">{{ stStatusLabel(item.support_status) }}</span>
+              <span v-if="item.support_ticket" class="gdm-st__ticket-ref">{{ item.support_ticket }}</span>
+            </div>
+            <div class="gdm-st-client__ticket-main">
+              <span class="gdm-st-client__ticket-title">{{ item.title || 'Untitled' }}</span>
+              <span v-if="item.short_description" class="gdm-st-client__ticket-desc">{{ item.short_description }}</span>
+            </div>
+            <div class="gdm-st-client__ticket-right">
+              <span v-if="item.subtype" class="gdm-cms__type-badge">{{ item.subtype }}</span>
+              <span v-if="getAuthorName(item)" class="gdm-st-client__ticket-author">{{ getAuthorName(item) }}</span>
+              <span class="gdm-st-client__ticket-date">{{ formatDate(item.created_at) }}</span>
+            </div>
           </div>
-          <div class="gdm-st-client__ticket-main">
-            <span class="gdm-st-client__ticket-title">{{ item.title || 'Untitled' }}</span>
-            <span v-if="item.short_description" class="gdm-st-client__ticket-desc">{{ item.short_description }}</span>
-          </div>
-          <div class="gdm-st-client__ticket-right">
-            <span v-if="item.subtype" class="gdm-cms__type-badge">{{ item.subtype }}</span>
-            <span v-if="getAuthorName(item)" class="gdm-st-client__ticket-author">{{ getAuthorName(item) }}</span>
-            <span class="gdm-st-client__ticket-date">{{ formatDate(item.created_at) }}</span>
+
+          <!-- ── Embedded comments ── -->
+          <div v-if="showComments" class="gdm-ec">
+            <button type="button" class="gdm-ec__toggle" @click.stop="toggleComments(item.id)">
+              <svg viewBox="0 0 20 20" fill="none" class="gdm-ec__toggle-icon"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              <span>{{ commentCountFor(item.id) === 0 ? 'No comments yet' : commentCountFor(item.id) + (commentCountFor(item.id) === 1 ? ' comment' : ' comments') }}</span>
+              <svg class="gdm-ec__toggle-chevron" :class="{ 'gdm-ec__toggle-chevron--open': isCommentOpen(item.id) }" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div v-show="isCommentOpen(item.id)" class="gdm-ec__panel">
+              <div class="gdm-ec__scroll" :ref="(el) => { if (el) commentsRefs[item.id] = el; }">
+                <div v-if="getItemComments(item.id).length === 0" class="gdm-ec__empty"><p>No comments yet — be the first to add one.</p></div>
+                <div v-for="c in getItemComments(item.id)" :key="c.id" class="gdm-ec__msg" :class="{ 'gdm-ec__msg--own': isOwnComment(c), 'gdm-ec__msg--preview': c._p }">
+                  <div class="gdm-ec__avatar" :style="{ background: commentAvatarColor(c.user_id) }">{{ commentInitials(getCommentUserName(c)) }}</div>
+                  <div class="gdm-ec__msg-body">
+                    <div class="gdm-ec__msg-header">
+                      <span class="gdm-ec__author">{{ getCommentUserName(c) }}</span>
+                      <span v-if="isOwnComment(c)" class="gdm-ec__you">you</span>
+                      <span class="gdm-ec__time">{{ formatRelDate(c.created_at) }}</span>
+                      <button v-if="isOwnComment(c) && !c._p" type="button" class="gdm-ec__delete" @click="deleteComment(c)" title="Delete">✕</button>
+                    </div>
+                    <p class="gdm-ec__text">{{ c.message }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="gdm-ec__compose">
+                <div class="gdm-ec__compose-avatar" :style="{ background: accent }">{{ currentUserInitial }}</div>
+                <textarea v-model="newCommentFor[item.id]" class="gdm-ec__input" placeholder="Add a comment…" rows="1" @keydown.enter.exact.prevent="postComment(item)" />
+                <button type="button" class="gdm-ec__post-btn" :disabled="!newCommentFor[item.id] || !newCommentFor[item.id].trim()" @click="postComment(item)">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1623,10 +1692,13 @@ export default {
   letter-spacing: 0.06em; color: #475569;
 }
 .gdm-st-client__ticket {
-  display: flex; align-items: flex-start; gap: 0.875rem;
+  display: flex; flex-direction: column;
   padding: 0.75rem 0; border-bottom: 1px solid #f1f5f9;
   &:first-of-type { border-top: 1px solid #f1f5f9; }
   &--preview { opacity: 0.75; }
+}
+.gdm-st-client__ticket-row {
+  display: flex; align-items: flex-start; gap: 0.875rem;
 }
 .gdm-st-client__ticket-left {
   display: flex; flex-direction: column; gap: 0.3rem;
