@@ -239,6 +239,274 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════
+         SUPPORT – ADMIN (manage tickets)
+    ════════════════════════════════════════════════ -->
+    <div v-else-if="isSupportAdmin" class="gdm-st">
+
+      <!-- Header -->
+      <div class="gdm-st__header">
+        <div class="gdm-st__header-left">
+          <span class="gdm-cms__admin-badge">Support Admin</span>
+          <h2 class="gdm-st__title">Ticket Management</h2>
+        </div>
+        <button type="button" class="gdm-cms__btn gdm-cms__btn--primary" @click="openSupportForm">
+          + New Ticket
+        </button>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="gdm-st__stats">
+        <div class="gdm-st__stat">
+          <span class="gdm-st__stat-val">{{ ticketStats.total }}</span>
+          <span class="gdm-st__stat-lbl">Total</span>
+        </div>
+        <div class="gdm-st__stat gdm-st__stat--open">
+          <span class="gdm-st__stat-val">{{ ticketStats.open }}</span>
+          <span class="gdm-st__stat-lbl">Open</span>
+        </div>
+        <div class="gdm-st__stat gdm-st__stat--progress">
+          <span class="gdm-st__stat-val">{{ ticketStats.in_progress }}</span>
+          <span class="gdm-st__stat-lbl">In Progress</span>
+        </div>
+        <div class="gdm-st__stat gdm-st__stat--closed">
+          <span class="gdm-st__stat-val">{{ ticketStats.closed }}</span>
+          <span class="gdm-st__stat-lbl">Closed</span>
+        </div>
+      </div>
+
+      <!-- New ticket form -->
+      <div v-if="supportFormVisible" class="gdm-st__form-wrap">
+        <div class="gdm-cms__form-card" :style="cardStyles">
+          <div class="gdm-cms__form-card-header">
+            <h3 class="gdm-cms__form-title">New Support Ticket</h3>
+          </div>
+          <form class="gdm-cms__form" @submit.prevent="saveSupportNew">
+            <div class="gdm-cms__grid-2">
+              <div class="gdm-cms__field">
+                <label class="gdm-cms__label">Status</label>
+                <select v-model="supportForm.support_status" class="gdm-cms__select" :style="inputBaseStyles">
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+              <div class="gdm-cms__field">
+                <label class="gdm-cms__label">Category</label>
+                <input v-model="supportForm.type" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Bug, Feature Request, Support…" />
+              </div>
+              <div class="gdm-cms__field">
+                <label class="gdm-cms__label">Ticket ref</label>
+                <input v-model="supportForm.support_ticket" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="TKT-001" />
+              </div>
+              <div class="gdm-cms__field">
+                <label class="gdm-cms__label">Due date</label>
+                <input v-model="supportForm.support_due" type="date" class="gdm-cms__input" :style="inputBaseStyles" />
+              </div>
+              <div class="gdm-cms__field gdm-cms__field--full">
+                <label class="gdm-cms__label">Subject <span class="gdm-cms__required">*</span></label>
+                <input v-model="supportForm.title" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Brief issue subject" />
+              </div>
+              <div class="gdm-cms__field gdm-cms__field--full">
+                <label class="gdm-cms__label">Short description</label>
+                <textarea v-model="supportForm.short_description" class="gdm-cms__textarea" :style="inputBaseStyles" rows="2" placeholder="One-line summary" />
+              </div>
+              <div class="gdm-cms__field gdm-cms__field--full">
+                <label class="gdm-cms__label">Full details</label>
+                <textarea v-model="supportForm.content" class="gdm-cms__textarea" :style="inputBaseStyles" rows="4" placeholder="Steps to reproduce, context, screenshots…" />
+              </div>
+            </div>
+            <div class="gdm-cms__form-actions">
+              <button type="submit" class="gdm-cms__btn gdm-cms__btn--primary" :disabled="!supportForm.title">Create Ticket</button>
+              <button type="button" class="gdm-cms__btn gdm-cms__btn--ghost" @click="closeSupportForm">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Filter pills -->
+      <div class="gdm-st__filters">
+        <button
+          v-for="f in [
+            { key: 'all',         label: 'All',         count: ticketStats.total },
+            { key: 'open',        label: 'Open',        count: ticketStats.open },
+            { key: 'in_progress', label: 'In Progress', count: ticketStats.in_progress },
+            { key: 'closed',      label: 'Closed',      count: ticketStats.closed },
+          ]"
+          :key="f.key"
+          type="button"
+          class="gdm-st__filter-btn"
+          :class="[
+            { 'gdm-st__filter-btn--active': supportFilter === f.key },
+            f.key !== 'all' ? 'gdm-st__filter-btn--' + f.key : '',
+          ]"
+          @click="supportFilter = f.key"
+        >
+          {{ f.label }}
+          <span class="gdm-st__filter-count">{{ f.count }}</span>
+        </button>
+      </div>
+
+      <!-- Ticket list -->
+      <div v-if="filteredTickets.length > 0" class="gdm-st__list">
+        <div
+          v-for="item in filteredTickets"
+          :key="item.id"
+          class="gdm-st__ticket"
+          :class="{ 'gdm-st__ticket--preview': item._preview, 'gdm-st__ticket--expanded': supportExpandedId === item.id }"
+        >
+          <!-- Row header -->
+          <div class="gdm-st__ticket-head" @click="toggleSupportExpand(item)">
+            <span class="gdm-st__badge" :class="stStatusClass(item.support_status)">{{ stStatusLabel(item.support_status) }}</span>
+            <span v-if="item.support_ticket" class="gdm-st__ticket-ref">{{ item.support_ticket }}</span>
+            <span class="gdm-st__ticket-title">{{ item.title || 'Untitled' }}</span>
+            <div class="gdm-st__ticket-meta">
+              <span v-if="item.type" class="gdm-cms__type-badge">{{ item.type }}</span>
+              <span
+                v-if="item.support_due"
+                class="gdm-st__ticket-due"
+                :class="{ 'gdm-st__ticket-due--overdue': isOverdue(item) }"
+              >Due {{ formatDate(item.support_due) }}</span>
+              <span class="gdm-st__ticket-date">{{ formatDate(item.created_at) }}</span>
+            </div>
+            <svg class="gdm-st__chevron" :class="{ 'gdm-st__chevron--open': supportExpandedId === item.id }" viewBox="0 0 16 16" fill="none">
+              <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="gdm-st__ticket-actions" @click.stop>
+              <button type="button" class="gdm-cms__action-btn gdm-cms__action-btn--delete" @click.stop="handleDelete(item)" title="Delete">🗑️</button>
+            </div>
+          </div>
+
+          <!-- Expanded: inline edit form -->
+          <div v-show="supportExpandedId === item.id" class="gdm-st__ticket-body">
+            <form class="gdm-cms__form" @submit.prevent="saveSupportUpdate(item)">
+              <div class="gdm-cms__grid-2">
+                <div class="gdm-cms__field">
+                  <label class="gdm-cms__label">Status</label>
+                  <select v-model="supportForm.support_status" class="gdm-cms__select" :style="inputBaseStyles">
+                    <option value="open">Open</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
+                <div class="gdm-cms__field">
+                  <label class="gdm-cms__label">Category</label>
+                  <input v-model="supportForm.type" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Bug, Feature Request…" />
+                </div>
+                <div class="gdm-cms__field">
+                  <label class="gdm-cms__label">Ticket ref</label>
+                  <input v-model="supportForm.support_ticket" type="text" class="gdm-cms__input" :style="inputBaseStyles" />
+                </div>
+                <div class="gdm-cms__field">
+                  <label class="gdm-cms__label">Due date</label>
+                  <input v-model="supportForm.support_due" type="date" class="gdm-cms__input" :style="inputBaseStyles" />
+                </div>
+                <div class="gdm-cms__field gdm-cms__field--full">
+                  <label class="gdm-cms__label">Subject</label>
+                  <input v-model="supportForm.title" type="text" class="gdm-cms__input" :style="inputBaseStyles" />
+                </div>
+                <div class="gdm-cms__field gdm-cms__field--full">
+                  <label class="gdm-cms__label">Short description</label>
+                  <textarea v-model="supportForm.short_description" class="gdm-cms__textarea" :style="inputBaseStyles" rows="2" />
+                </div>
+                <div class="gdm-cms__field gdm-cms__field--full">
+                  <label class="gdm-cms__label">Full details</label>
+                  <textarea v-model="supportForm.content" class="gdm-cms__textarea" :style="inputBaseStyles" rows="4" />
+                </div>
+              </div>
+              <div class="gdm-cms__form-actions">
+                <button type="submit" class="gdm-cms__btn gdm-cms__btn--primary">Save Update</button>
+                <button type="button" class="gdm-cms__btn gdm-cms__btn--ghost" @click="closeSupportExpand">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="gdm-cms__empty">
+        <div class="gdm-cms__empty-icon">🎫</div>
+        <p class="gdm-cms__empty-text">No {{ supportFilter !== 'all' ? stStatusLabel(supportFilter) + ' ' : '' }}tickets</p>
+        <p v-if="supportFilter !== 'all'" class="gdm-cms__empty-sub">Switch to "All" to see tickets in other statuses</p>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         SUPPORT – CLIENT (submit a ticket)
+    ════════════════════════════════════════════════ -->
+    <div v-else-if="isSupportClient" class="gdm-st-client">
+
+      <!-- Submit form -->
+      <div class="gdm-st-client__form-section">
+        <div class="gdm-st-client__form-header">
+          <h3 class="gdm-st-client__form-title">Submit a Support Ticket</h3>
+          <p class="gdm-st-client__form-sub">Describe your issue and we'll get back to you as soon as possible.</p>
+        </div>
+        <form class="gdm-cms__form" @submit.prevent="submitClientTicket">
+          <div class="gdm-cms__field gdm-cms__field--full">
+            <label class="gdm-cms__label">Subject <span class="gdm-cms__required">*</span></label>
+            <input v-model="clientForm.title" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Brief description of your issue" />
+          </div>
+          <div class="gdm-cms__field">
+            <label class="gdm-cms__label">Category</label>
+            <select v-model="clientForm.type" class="gdm-cms__select" :style="inputBaseStyles">
+              <option value="Bug">Bug / Error</option>
+              <option value="Feature Request">Feature Request</option>
+              <option value="Support">General Support</option>
+              <option value="Performance">Performance Issue</option>
+              <option value="Question">Question</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="gdm-cms__field gdm-cms__field--full">
+            <label class="gdm-cms__label">Brief description</label>
+            <textarea v-model="clientForm.short_description" class="gdm-cms__textarea" :style="inputBaseStyles" rows="2" placeholder="One-sentence summary of the problem" />
+          </div>
+          <div class="gdm-cms__field gdm-cms__field--full">
+            <label class="gdm-cms__label">Full details</label>
+            <textarea v-model="clientForm.content" class="gdm-cms__textarea" :style="inputBaseStyles" rows="5" placeholder="Steps to reproduce, expected vs actual behaviour, any relevant context…" />
+          </div>
+          <div class="gdm-cms__form-actions">
+            <button type="submit" class="gdm-cms__btn gdm-cms__btn--primary" :disabled="!clientForm.title">
+              <svg viewBox="0 0 16 16" fill="none" style="width:14px;height:14px;flex-shrink:0">
+                <path d="M1 8l7-6 7 6M3 6v7h4v-4h4v4h4V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Submit Ticket
+            </button>
+            <button type="button" class="gdm-cms__btn gdm-cms__btn--ghost" @click="resetClientForm">Clear</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Past tickets -->
+      <div v-if="displayItems.length > 0" class="gdm-st-client__history">
+        <div class="gdm-st-client__history-header">
+          <span class="gdm-st-client__history-title">Your Tickets</span>
+          <span class="gdm-cms__list-count">{{ displayItems.length }}</span>
+        </div>
+        <div
+          v-for="item in displayItems"
+          :key="item.id"
+          class="gdm-st-client__ticket"
+          :class="{ 'gdm-st-client__ticket--preview': item._preview }"
+        >
+          <div class="gdm-st-client__ticket-left">
+            <span class="gdm-st__badge" :class="stStatusClass(item.support_status)">{{ stStatusLabel(item.support_status) }}</span>
+            <span v-if="item.support_ticket" class="gdm-st__ticket-ref">{{ item.support_ticket }}</span>
+          </div>
+          <div class="gdm-st-client__ticket-main">
+            <span class="gdm-st-client__ticket-title">{{ item.title || 'Untitled' }}</span>
+            <span v-if="item.short_description" class="gdm-st-client__ticket-desc">{{ item.short_description }}</span>
+          </div>
+          <div class="gdm-st-client__ticket-right">
+            <span v-if="item.type" class="gdm-cms__type-badge">{{ item.type }}</span>
+            <span class="gdm-st-client__ticket-date">{{ formatDate(item.created_at) }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
          CLIENT – SCROLL FEED (release-notes style)
     ════════════════════════════════════════════════ -->
     <div v-else class="gdm-feed">
@@ -337,6 +605,13 @@
 <script>
 import { ref, computed, reactive, nextTick } from 'vue';
 
+/* ─── Preview support tickets ─── */
+const PREVIEW_TICKETS = [
+  { id: 'st1', _preview: true, title: 'Login page returns 404 after latest update', type: 'Bug', subtype: '', support_status: 'open', support_ticket: 'TKT-003', support_due: new Date(Date.now() + 86400000 * 3).toISOString(), created_at: new Date(Date.now() - 86400000).toISOString(), short_description: 'Users cannot access the login page after the latest deployment.', content: 'Affects all browsers. Clearing cache does not help. Started after v2.4 deploy.' },
+  { id: 'st2', _preview: true, title: 'Add bulk CSV export to orders dashboard', type: 'Feature Request', subtype: '', support_status: 'in_progress', support_ticket: 'TKT-002', support_due: new Date(Date.now() + 86400000 * 10).toISOString(), created_at: new Date(Date.now() - 86400000 * 5).toISOString(), short_description: 'Need to export all order data to CSV for accounting.', content: 'Ideally filterable by date range and client. Urgently needed for end-of-month reporting.' },
+  { id: 'st3', _preview: true, title: 'Dashboard loads very slowly on mobile', type: 'Performance', subtype: '', support_status: 'closed', support_ticket: 'TKT-001', support_due: '', created_at: new Date(Date.now() - 86400000 * 14).toISOString(), short_description: '8+ second load time on mobile devices.', content: 'Resolved — image optimisation and lazy loading deployed in v2.3.' },
+];
+
 /* ─── Preview CMS items ─── */
 const PREVIEW_ITEMS = [
   { id: 'p1', _preview: true, type: 'changelog', subtype: '', title: 'Platform update v2.4 — New dashboard', short_description: 'We\'ve rolled out a completely redesigned analytics dashboard with improved charts and real-time data.', content: 'The new layout brings key metrics front and center, with live updates and customizable widget placement. Widgets can be resized and repositioned via drag-and-drop. Saved layouts persist across sessions and can be shared with teammates.', imagelink: '', support_status: '', created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
@@ -390,8 +665,10 @@ export default {
     const projects  = computed(() => getList('projectsData'));
 
     /* ─── View mode ─── */
-    const isAdmin      = computed(() => props.content?.viewMode === 'admin' || !props.content?.viewMode);
-    const isClientList = computed(() => props.content?.viewMode === 'client');
+    const isAdmin        = computed(() => props.content?.viewMode === 'admin' || !props.content?.viewMode);
+    const isClientList   = computed(() => props.content?.viewMode === 'client');
+    const isSupportAdmin = computed(() => props.content?.viewMode === 'support-admin');
+    const isSupportClient = computed(() => props.content?.viewMode === 'support-client');
 
     /* ─── Form ─── */
     const formVisible = ref(props.content?.showForm !== false);
@@ -479,7 +756,10 @@ export default {
     const displayItems = computed(() => {
       const items = cmsItems.value;
       /* wwEditor:start */
-      if (props.wwEditorState?.isEditing && items.length === 0) return PREVIEW_ITEMS;
+      if (props.wwEditorState?.isEditing && items.length === 0) {
+        const vm = props.content?.viewMode;
+        return (vm === 'support-admin' || vm === 'support-client') ? PREVIEW_TICKETS : PREVIEW_ITEMS;
+      }
       /* wwEditor:end */
       return items;
     });
@@ -624,6 +904,177 @@ export default {
       });
     };
 
+    /* ═══════════════════════════════════
+       SUPPORT TICKET VIEWS
+    ═══════════════════════════════════ */
+
+    /* ── Date input converter ── */
+    const toDateInput = (d) => {
+      if (!d) return '';
+      const s = String(d);
+      if (s.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+      try {
+        const dt = new Date(d);
+        if (isNaN(dt.getTime())) return '';
+        return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      } catch { return ''; }
+    };
+
+    /* ── Status helpers ── */
+    const stStatusLabel = (s) => {
+      if (!s) return 'Open';
+      return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    };
+    const stStatusClass = (s) => {
+      const n = (s || '').toLowerCase().replace(/[\s-]/g, '_');
+      if (n === 'open')        return 'gdm-st__badge--open';
+      if (n === 'in_progress') return 'gdm-st__badge--progress';
+      if (n === 'closed')      return 'gdm-st__badge--closed';
+      return 'gdm-st__badge--open';
+    };
+    const isOverdue = (item) => {
+      if (!item.support_due) return false;
+      if ((item.support_status || '').toLowerCase() === 'closed') return false;
+      return new Date(item.support_due).getTime() < Date.now();
+    };
+
+    /* ── Ticket stats ── */
+    const ticketStats = computed(() => {
+      const items = displayItems.value;
+      const norm = (s) => (s || '').toLowerCase().replace(/[\s-]/g, '_');
+      return {
+        total:       items.length,
+        open:        items.filter(i => norm(i.support_status) === 'open').length,
+        in_progress: items.filter(i => norm(i.support_status) === 'in_progress').length,
+        closed:      items.filter(i => norm(i.support_status) === 'closed').length,
+      };
+    });
+
+    /* ── Filter ── */
+    const supportFilter = ref('all');
+    const filteredTickets = computed(() => {
+      const items = displayItems.value;
+      if (supportFilter.value === 'all') return items;
+      return items.filter(i =>
+        (i.support_status || '').toLowerCase().replace(/[\s-]/g, '_') === supportFilter.value
+      );
+    });
+
+    /* ── Shared support form ── */
+    const blankSupportForm = () => ({
+      title: '', type: '', subtype: '',
+      short_description: '', content: '',
+      support_status: 'open', support_due: '',
+      support_ticket: '',
+    });
+    const supportForm = ref(blankSupportForm());
+
+    /* ── Admin: new ticket form ── */
+    const supportFormVisible  = ref(false);
+
+    const openSupportForm = () => {
+      supportExpandedId.value = null;
+      supportForm.value = blankSupportForm();
+      supportFormVisible.value = true;
+    };
+    const closeSupportForm = () => { supportFormVisible.value = false; };
+
+    const saveSupportNew = () => {
+      /* wwEditor:start */
+      if (props.wwEditorState?.isEditing) return;
+      /* wwEditor:end */
+      if (!supportForm.value.title) return;
+      emit('trigger-event', {
+        name: 'onSubmit',
+        event: { value: {
+          title:             supportForm.value.title || null,
+          type:              supportForm.value.type || null,
+          subtype:           supportForm.value.subtype || null,
+          short_description: supportForm.value.short_description || null,
+          content:           supportForm.value.content || null,
+          support_status:    supportForm.value.support_status || 'open',
+          support_due:       supportForm.value.support_due || null,
+          support_ticket:    supportForm.value.support_ticket || null,
+        }},
+      });
+      closeSupportForm();
+    };
+
+    /* ── Admin: expand ticket row for editing ── */
+    const supportExpandedId = ref(null);
+
+    const toggleSupportExpand = (item) => {
+      /* wwEditor:start */
+      if (isEditionMode()) return;
+      /* wwEditor:end */
+      if (item._preview) return;
+      if (supportExpandedId.value === item.id) {
+        supportExpandedId.value = null;
+        supportForm.value = blankSupportForm();
+      } else {
+        supportFormVisible.value = false;
+        supportExpandedId.value = item.id;
+        supportForm.value = {
+          title:             item.title             || '',
+          type:              item.type              || '',
+          subtype:           item.subtype           || '',
+          short_description: item.short_description || '',
+          content:           item.content           || '',
+          support_status:    item.support_status    || 'open',
+          support_due:       toDateInput(item.support_due),
+          support_ticket:    item.support_ticket    || '',
+        };
+      }
+    };
+    const closeSupportExpand = () => {
+      supportExpandedId.value = null;
+      supportForm.value = blankSupportForm();
+    };
+
+    const saveSupportUpdate = (item) => {
+      /* wwEditor:start */
+      if (props.wwEditorState?.isEditing) return;
+      /* wwEditor:end */
+      if (item._preview) return;
+      emit('trigger-event', {
+        name: 'onUpdate',
+        event: { value: {
+          id:                item.id,
+          title:             supportForm.value.title             || null,
+          type:              supportForm.value.type              || null,
+          subtype:           supportForm.value.subtype           || null,
+          short_description: supportForm.value.short_description || null,
+          content:           supportForm.value.content           || null,
+          support_status:    supportForm.value.support_status    || 'open',
+          support_due:       supportForm.value.support_due       || null,
+          support_ticket:    supportForm.value.support_ticket    || null,
+        }},
+      });
+      closeSupportExpand();
+    };
+
+    /* ── Client: submit new ticket form ── */
+    const clientForm = ref({ title: '', type: 'Support', short_description: '', content: '' });
+    const resetClientForm = () => { clientForm.value = { title: '', type: 'Support', short_description: '', content: '' }; };
+
+    const submitClientTicket = () => {
+      /* wwEditor:start */
+      if (props.wwEditorState?.isEditing) return;
+      /* wwEditor:end */
+      if (!clientForm.value.title) return;
+      emit('trigger-event', {
+        name: 'onSubmit',
+        event: { value: {
+          title:             clientForm.value.title || null,
+          type:              clientForm.value.type || 'Support',
+          short_description: clientForm.value.short_description || null,
+          content:           clientForm.value.content || null,
+          support_status:    'open',
+        }},
+      });
+      resetClientForm();
+    };
+
     /* ─── Labels & formatting ─── */
     const getText = (val, fallback) => {
       if (typeof wwLib !== 'undefined' && wwLib?.wwLang?.getText) return wwLib.wwLang.getText(val) || fallback;
@@ -669,7 +1120,14 @@ export default {
     }));
 
     return {
-      props, isAdmin, isClientList,
+      props, isAdmin, isClientList, isSupportAdmin, isSupportClient,
+      /* support */
+      ticketStats, supportFilter, filteredTickets, supportForm,
+      supportFormVisible, supportExpandedId,
+      openSupportForm, closeSupportForm, saveSupportNew,
+      toggleSupportExpand, closeSupportExpand, saveSupportUpdate,
+      stStatusLabel, stStatusClass, isOverdue,
+      clientForm, resetClientForm, submitClientTicket,
       formVisible, form, editingId,
       cmsItems, clients, projects, displayItems,
       expandedId,
@@ -1003,6 +1461,162 @@ export default {
   .gdm-ec__compose-avatar { display: none; }
   .gdm-list-row__date { display: none; }
 }
+
+/* ═══════════════════════════════════════════
+   SUPPORT ADMIN  (.gdm-st)
+═══════════════════════════════════════════ */
+.gdm-st { width: 100%; }
+
+.gdm-st__header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;
+}
+.gdm-st__header-left { display: flex; flex-direction: column; gap: 0.375rem; }
+.gdm-st__title { margin: 0; font-size: 1.125rem; font-weight: 700; color: var(--gdm-text); }
+
+/* Stats */
+.gdm-st__stats {
+  display: flex; gap: 0.75rem; flex-wrap: wrap;
+  margin-bottom: 1.125rem; padding: 0.875rem;
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+}
+.gdm-st__stat {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 52px; gap: 0.125rem;
+}
+.gdm-st__stat-val { font-size: 1.375rem; font-weight: 800; color: #1e293b; line-height: 1; }
+.gdm-st__stat-lbl { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; }
+.gdm-st__stat--open     .gdm-st__stat-val { color: #f59e0b; }
+.gdm-st__stat--progress .gdm-st__stat-val { color: #3b82f6; }
+.gdm-st__stat--closed   .gdm-st__stat-val { color: #10b981; }
+
+/* Form wrap */
+.gdm-st__form-wrap { margin-bottom: 1.25rem; }
+
+/* Filter pills */
+.gdm-st__filters {
+  display: flex; gap: 0.375rem; flex-wrap: wrap;
+  margin-bottom: 0.875rem;
+}
+.gdm-st__filter-btn {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.3rem 0.75rem; border-radius: 20px;
+  font-size: 0.8125rem; font-weight: 500; cursor: pointer;
+  border: 1.5px solid #e2e8f0; background: transparent; color: #64748b;
+  pointer-events: all; transition: all 0.15s;
+  &:hover { background: #f1f5f9; }
+  &--active { background: var(--gdm-accent); color: #fff; border-color: var(--gdm-accent); }
+  &--open.gdm-st__filter-btn--active     { background: #f59e0b; border-color: #f59e0b; }
+  &--in_progress.gdm-st__filter-btn--active { background: #3b82f6; border-color: #3b82f6; }
+  &--closed.gdm-st__filter-btn--active   { background: #10b981; border-color: #10b981; }
+}
+.gdm-st__filter-count {
+  font-size: 0.6875rem; font-weight: 700;
+  background: rgba(0,0,0,0.1); border-radius: 99px; padding: 0 5px; line-height: 1.5;
+  .gdm-st__filter-btn--active & { background: rgba(255,255,255,0.25); }
+}
+
+/* Ticket list */
+.gdm-st__list { display: flex; flex-direction: column; }
+.gdm-st__ticket {
+  border-bottom: 1px solid #f1f5f9;
+  &:first-child { border-top: 1px solid #f1f5f9; }
+  &--preview { opacity: 0.7; }
+  &--expanded { background: #fafbfc; border-radius: 8px; margin-bottom: 2px; border: 1px solid #e2e8f0; }
+}
+
+/* Ticket row head */
+.gdm-st__ticket-head {
+  display: flex; align-items: center; gap: 0.625rem;
+  padding: 0.75rem 0.25rem; cursor: pointer;
+  pointer-events: all;
+  &:hover { background: #fafbfc; border-radius: 4px; }
+  .gdm-st__ticket--expanded & { padding: 0.75rem; }
+}
+.gdm-st__ticket-ref {
+  font-size: 0.6875rem; font-weight: 600; color: #94a3b8;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  flex-shrink: 0;
+}
+.gdm-st__ticket-title {
+  flex: 1; min-width: 0; font-size: 0.9rem; font-weight: 600; color: var(--gdm-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gdm-st__ticket-meta {
+  display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; flex-wrap: wrap;
+}
+.gdm-st__ticket-due {
+  font-size: 0.75rem; color: #64748b;
+  &--overdue { color: #ef4444; font-weight: 600; }
+}
+.gdm-st__ticket-date { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; }
+.gdm-st__chevron {
+  width: 15px; height: 15px; flex-shrink: 0; color: #94a3b8;
+  transition: transform 0.2s; &--open { transform: rotate(180deg); }
+}
+.gdm-st__ticket-actions { flex-shrink: 0; }
+
+/* Ticket body (inline edit) */
+.gdm-st__ticket-body { padding: 0.5rem 0.75rem 1rem; }
+
+/* ── Status badges ── */
+.gdm-st__badge {
+  font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+  padding: 0.2rem 0.55rem; border-radius: 4px; white-space: nowrap;
+  color: #fff; background: #94a3b8; flex-shrink: 0;
+  &--open     { background: #f59e0b; }
+  &--progress { background: #3b82f6; }
+  &--closed   { background: #10b981; }
+}
+
+/* ═══════════════════════════════════════════
+   SUPPORT CLIENT  (.gdm-st-client)
+═══════════════════════════════════════════ */
+.gdm-st-client { width: 100%; }
+
+.gdm-st-client__form-section {
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.gdm-st-client__form-header { margin-bottom: 1.25rem; }
+.gdm-st-client__form-title { margin: 0 0 0.25rem; font-size: 1.125rem; font-weight: 700; color: var(--gdm-text); }
+.gdm-st-client__form-sub { margin: 0; font-size: 0.8125rem; color: #64748b; line-height: 1.5; }
+
+/* History */
+.gdm-st-client__history { display: flex; flex-direction: column; }
+.gdm-st-client__history-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.gdm-st-client__history-title {
+  font-size: 0.875rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #475569;
+}
+.gdm-st-client__ticket {
+  display: flex; align-items: flex-start; gap: 0.875rem;
+  padding: 0.75rem 0; border-bottom: 1px solid #f1f5f9;
+  &:first-of-type { border-top: 1px solid #f1f5f9; }
+  &--preview { opacity: 0.75; }
+}
+.gdm-st-client__ticket-left {
+  display: flex; flex-direction: column; gap: 0.3rem;
+  flex-shrink: 0; width: 82px;
+}
+.gdm-st-client__ticket-main {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem;
+}
+.gdm-st-client__ticket-title {
+  font-weight: 600; font-size: 0.875rem; color: var(--gdm-text); line-height: 1.3;
+}
+.gdm-st-client__ticket-desc {
+  font-size: 0.8rem; color: #64748b;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+}
+.gdm-st-client__ticket-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; flex-shrink: 0;
+}
+.gdm-st-client__ticket-date { font-size: 0.75rem; color: #94a3b8; }
 
 /* ─────────────── EMPTY STATE ─────────────── */
 .gdm-cms__empty { padding: 2.5rem 1rem; text-align: center; background: #f8fafc; border-radius: 10px; border: 1.5px dashed #e2e8f0; }

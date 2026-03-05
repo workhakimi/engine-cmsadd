@@ -60,12 +60,14 @@ export default {
           { value: 'admin', label: { en: 'Admin – Add / Edit / Delete' } },
           { value: 'client', label: { en: 'Client – Compact accordion list' } },
           { value: 'client-scroll', label: { en: 'Client – Scroll feed (release notes)' } },
+          { value: 'support-admin', label: { en: 'Support – Admin manage tickets' } },
+          { value: 'support-client', label: { en: 'Support – Client submit ticket' } },
         ],
       },
       defaultValue: 'admin',
       bindable: true,
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: '"admin", "client", or "client-scroll"' },
+      bindingValidation: { type: 'string', tooltip: '"admin", "client", "client-scroll", "support-admin", or "support-client"' },
       /* wwEditor:end */
     },
     cmsData: {
