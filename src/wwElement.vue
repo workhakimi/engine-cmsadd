@@ -686,14 +686,13 @@ export default {
   setup(props, { emit }) {
 
     /* ─── Data from bindings ─── */
-    const getList = (key) => {
-      const data = props.content?.[key];
+    const resolveCollection = (data) => {
       if (!data) return [];
-      const arr = typeof wwLib !== 'undefined' && wwLib?.wwUtils?.getDataFromCollection
-        ? wwLib.wwUtils.getDataFromCollection(data)
-        : data;
+      const wwUtils = typeof wwLib !== 'undefined' ? wwLib?.wwUtils : null;
+      const arr = wwUtils?.getDataFromCollection ? wwUtils.getDataFromCollection(data) : data;
       return Array.isArray(arr) ? arr : [];
     };
+    const getList = (key) => resolveCollection(props.content?.[key]);
 
     const cmsItems  = computed(() => getList('cmsData'));
     const clients   = computed(() => getList('clientsData'));
@@ -703,11 +702,12 @@ export default {
     const isAdmin        = computed(() => props.content?.viewMode === 'admin' || !props.content?.viewMode);
     const isClientList   = computed(() => props.content?.viewMode === 'client');
 
-    /* ─── KL timestamp (UTC+8, returns ISO string with +08:00 offset) ─── */
+    /* ─── KL timestamps (UTC+8) ─── */
     const nowKL = () => {
       const kl = new Date(Date.now() + 8 * 3600000);
       return kl.toISOString().replace('Z', '+08:00');
     };
+    const nowKLDate = () => new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
     const isSupportAdmin = computed(() => props.content?.viewMode === 'support-admin');
     const isSupportClient = computed(() => props.content?.viewMode === 'support-client');
 
@@ -756,11 +756,15 @@ export default {
       if (props.wwEditorState?.isEditing) return;
       /* wwEditor:end */
       const payload = {
-        title: form.value.title || null, type: form.value.type || null,
-        subtype: form.value.subtype || null,
-        short_description: form.value.shortDescription || null, content: form.value.bodyContent || null,
-        client_id: form.value.clientId || props.content?.clientId || null, imagelink: form.value.imagelink || null,
-        projectidref: form.value.projectIdRef || null,
+        title:             form.value.title || null,
+        type:              form.value.type || null,
+        subtype:           form.value.subtype || null,
+        short_description: form.value.shortDescription || null,
+        content:           form.value.bodyContent || null,
+        client_id:         form.value.clientId || props.content?.clientId || null,
+        author_id:         props.content?.currentUserId || null,
+        imagelink:         form.value.imagelink || null,
+        projectidref:      form.value.projectIdRef || null,
       };
       if (editingId.value) {
         emit('trigger-event', { name: 'onUpdate', event: { value: {
@@ -825,30 +829,20 @@ export default {
 
     /* ─── All comms data ─── */
     const allComments = computed(() => {
-      const data = props.content?.commsData;
-      let arr = [];
-      if (data) {
-        arr = typeof wwLib !== 'undefined' && wwLib?.wwUtils?.getDataFromCollection
-          ? wwLib.wwUtils.getDataFromCollection(data)
-          : data;
-        if (!Array.isArray(arr)) arr = [];
-      }
+      const arr = resolveCollection(props.content?.commsData);
       /* wwEditor:start */
       if (props.wwEditorState?.isEditing && arr.length === 0) return COMMS_PREVIEW;
       /* wwEditor:end */
       return arr;
     });
 
-    /* ─── Users map ─── */
+    /* ─── Users map: email → display name (from users_roles) ─── */
     const usersMap = computed(() => {
-      const data = props.content?.usersData;
-      if (!data) return {};
-      const arr = typeof wwLib !== 'undefined' && wwLib?.wwUtils?.getDataFromCollection
-        ? wwLib.wwUtils.getDataFromCollection(data)
-        : data;
-      if (!Array.isArray(arr)) return {};
       const map = {};
-      arr.forEach(u => { const id = u.email ?? u.userid ?? u.id; if (id) map[id] = u.name ?? u.contact_name ?? 'User'; });
+      resolveCollection(props.content?.usersData).forEach(u => {
+        const id = u.email ?? u.userid ?? u.id;
+        if (id) map[id] = u.name ?? u.contact_name ?? 'User';
+      });
       return map;
     });
 
@@ -1048,17 +1042,19 @@ export default {
       emit('trigger-event', {
         name: 'onSubmitTicket',
         event: { value: {
-          title:             supportForm.value.title || null,
-          type:              'Ticket',
-          subtype:           supportForm.value.subtype || null,
-          content:           supportForm.value.content || null,
-          support_status:    supportForm.value.support_status || 'open',
-          support_due:       supportForm.value.support_due || null,
-          support_ticket:    supportForm.value.support_ticket || null,
-          projectidref:      null,
-          client_id:         props.content?.clientId || null,
-          created_at:        nowKL(),
-          updated_at:        nowKL(),
+          title:            supportForm.value.title || null,
+          type:             'Ticket',
+          subtype:          supportForm.value.subtype || null,
+          content:          supportForm.value.content || null,
+          support_status:   supportForm.value.support_status || 'open',
+          support_due:      supportForm.value.support_due || null,
+          support_ticket:   supportForm.value.support_ticket || null,
+          support_closed_at: null,
+          projectidref:     null,
+          client_id:        props.content?.clientId || null,
+          author_id:        props.content?.currentUserId || null,
+          created_at:       nowKL(),
+          updated_at:       nowKL(),
         }},
       });
       closeSupportForm();
@@ -1101,18 +1097,22 @@ export default {
       emit('trigger-event', {
         name: 'onUpdateTicket',
         event: { value: {
-          id:                item.id,
-          client_id:         item.client_id || props.content?.clientId || null,
-          title:          supportForm.value.title          || null,
-          type:           'Ticket',
-          subtype:        supportForm.value.subtype        || null,
-          content:        supportForm.value.content        || null,
-          support_status: supportForm.value.support_status || 'open',
-          support_due:       supportForm.value.support_due       || null,
-          support_ticket:    supportForm.value.support_ticket    || null,
-          projectidref:      item.projectidref || null,
-          created_at:        item.created_at || nowKL(),
-          updated_at:        nowKL(),
+          id:               item.id,
+          client_id:        item.client_id || props.content?.clientId || null,
+          author_id:        item.author_id || props.content?.currentUserId || null,
+          title:            supportForm.value.title          || null,
+          type:             'Ticket',
+          subtype:          supportForm.value.subtype        || null,
+          content:          supportForm.value.content        || null,
+          support_status:   supportForm.value.support_status || 'open',
+          support_due:      supportForm.value.support_due    || null,
+          support_ticket:   supportForm.value.support_ticket || null,
+          support_closed_at: supportForm.value.support_status === 'closed'
+            ? (item.support_closed_at || nowKLDate())
+            : null,
+          projectidref:     item.projectidref || null,
+          created_at:       item.created_at || nowKL(),
+          updated_at:       nowKL(),
         }},
       });
       closeSupportExpand();
@@ -1130,15 +1130,17 @@ export default {
       emit('trigger-event', {
         name: 'onSubmitTicket',
         event: { value: {
-          title:   clientForm.value.title   || null,
-          type:    'Ticket',
-          subtype: clientForm.value.subtype || null,
-          content: clientForm.value.content || null,
+          title:             clientForm.value.title   || null,
+          type:              'Ticket',
+          subtype:           clientForm.value.subtype || null,
+          content:           clientForm.value.content || null,
           support_status:    'open',
           support_due:       null,
           support_ticket:    null,
+          support_closed_at: null,
           projectidref:      null,
           client_id:         props.content?.clientId || null,
+          author_id:         props.content?.currentUserId || null,
           created_at:        nowKL(),
           updated_at:        nowKL(),
         }},

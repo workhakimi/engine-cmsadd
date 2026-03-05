@@ -4,9 +4,9 @@ export default {
     icon: 'pencil',
     customSettingsPropertiesOrder: [
       'viewMode',
-      { label: 'Data', isCollapsible: true, properties: ['cmsData', 'clientsData', 'projectsData', 'clientId'] },
-      { label: 'Comments', isCollapsible: true, properties: ['showComments', 'commsData', 'usersData', 'currentUserId'] },
-      { label: 'Pre-fill / Edit', isCollapsible: true, properties: ['clientId', 'type', 'subtype', 'title', 'shortDescription', 'content', 'imagelink', 'projectIdRef'] },
+      { label: 'Data', isCollapsible: true, properties: ['cmsData', 'clientsData', 'projectsData', 'clientId', 'usersData', 'currentUserId'] },
+      { label: 'Comments', isCollapsible: true, properties: ['showComments', 'commsData'] },
+      { label: 'Pre-fill / Edit', isCollapsible: true, properties: ['type', 'subtype', 'title', 'shortDescription', 'content', 'imagelink', 'projectIdRef'] },
       { label: 'Form settings', isCollapsible: true, properties: ['showForm', 'submitButtonText', 'showResetButton', 'resetButtonText'] },
     ],
     customStylePropertiesOrder: [
@@ -31,13 +31,13 @@ export default {
     {
       name: 'onSubmit',
       label: { en: 'On add item' },
-      event: { value: { title: null, type: null, subtype: null, short_description: null, content: null, client_id: null, imagelink: null, projectidref: null } },
+      event: { value: { title: null, type: null, subtype: null, short_description: null, content: null, client_id: null, author_id: null, imagelink: null, projectidref: null, created_at: null, updated_at: null } },
       default: true,
     },
     {
       name: 'onUpdate',
       label: { en: 'On update item' },
-      event: { value: { id: null, title: null, type: null, subtype: null, short_description: null, content: null, client_id: null, imagelink: null, projectidref: null } },
+      event: { value: { id: null, title: null, type: null, subtype: null, short_description: null, content: null, client_id: null, author_id: null, imagelink: null, projectidref: null, created_at: null, updated_at: null } },
     },
     {
       name: 'onDeleteItem',
@@ -52,12 +52,12 @@ export default {
     {
       name: 'onSubmitTicket',
       label: { en: 'On submit ticket (support)' },
-      event: { value: { title: null, type: null, subtype: null, content: null, client_id: null, support_due: null, support_status: null, support_ticket: null, projectidref: null, created_at: null, updated_at: null } },
+      event: { value: { title: null, type: null, subtype: null, content: null, client_id: null, author_id: null, support_due: null, support_status: null, support_ticket: null, projectidref: null, created_at: null, updated_at: null } },
     },
     {
       name: 'onUpdateTicket',
       label: { en: 'On update ticket (support admin)' },
-      event: { value: { id: null, title: null, type: null, subtype: null, content: null, client_id: null, support_due: null, support_status: null, support_ticket: null, projectidref: null, created_at: null, updated_at: null } },
+      event: { value: { id: null, title: null, type: null, subtype: null, content: null, client_id: null, author_id: null, support_due: null, support_status: null, support_closed_at: null, support_ticket: null, projectidref: null, created_at: null, updated_at: null } },
     },
   ],
   properties: {
@@ -205,9 +205,9 @@ export default {
       section: 'settings',
       bindable: true,
       defaultValue: [],
-      hidden: (content) => content.viewMode === 'admin' || content.showComments === false,
+      hidden: (content) => content.showComments === false,
       /* wwEditor:start */
-      bindingValidation: { type: 'array', tooltip: 'All comms_log rows — filtered per article by cms_id client-side' },
+      bindingValidation: { type: 'array', tooltip: 'All comms_log rows — filtered per cms_id client-side' },
       /* wwEditor:end */
     },
     usersData: {
@@ -216,20 +216,18 @@ export default {
       section: 'settings',
       bindable: true,
       defaultValue: [],
-      hidden: (content) => content.viewMode === 'admin' || content.showComments === false,
       /* wwEditor:start */
-      bindingValidation: { type: 'array', tooltip: 'user_record rows — used to resolve user display names' },
+      bindingValidation: { type: 'array', tooltip: 'users_roles rows — resolves author_id / user_id to display names' },
       /* wwEditor:end */
     },
     currentUserId: {
-      label: { en: 'Current user ID' },
+      label: { en: 'Current user email (author_id)' },
       type: 'Text',
       section: 'settings',
       bindable: true,
       defaultValue: '',
-      hidden: (content) => content.viewMode === 'admin' || content.showComments === false,
       /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'UUID of the logged-in user (for posting comments)' },
+      bindingValidation: { type: 'string', tooltip: 'Email of the logged-in user — used as author_id and for comment ownership' },
       /* wwEditor:end */
     },
     commentsMaxHeight: {
