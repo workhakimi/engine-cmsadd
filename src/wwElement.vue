@@ -1088,7 +1088,7 @@ export default {
       /* wwEditor:end */
       if (!supportForm.value.title) return;
       emit('trigger-event', {
-        name: 'onSubmit',
+        name: 'onSubmitTicket',
         event: { value: {
           title:             supportForm.value.title || null,
           type:              'Ticket',
@@ -1098,6 +1098,7 @@ export default {
           support_status:    supportForm.value.support_status || 'open',
           support_due:       supportForm.value.support_due || null,
           support_ticket:    supportForm.value.support_ticket || null,
+          projectidref:      null,
           client_id:         props.content?.clientId || null,
           created_at:        nowKL(),
           updated_at:        nowKL(),
@@ -1142,7 +1143,7 @@ export default {
       /* wwEditor:end */
       if (item._preview) return;
       emit('trigger-event', {
-        name: 'onUpdate',
+        name: 'onUpdateTicket',
         event: { value: {
           id:                item.id,
           client_id:         item.client_id || props.content?.clientId || null,
@@ -1154,6 +1155,7 @@ export default {
           support_status:    supportForm.value.support_status    || 'open',
           support_due:       supportForm.value.support_due       || null,
           support_ticket:    supportForm.value.support_ticket    || null,
+          projectidref:      item.projectidref || null,
           created_at:        item.created_at || nowKL(),
           updated_at:        nowKL(),
         }},
@@ -1171,7 +1173,7 @@ export default {
       /* wwEditor:end */
       if (!clientForm.value.title) return;
       emit('trigger-event', {
-        name: 'onSubmit',
+        name: 'onSubmitTicket',
         event: { value: {
           title:             clientForm.value.title || null,
           type:              'Ticket',
@@ -1179,6 +1181,9 @@ export default {
           short_description: clientForm.value.short_description || null,
           content:           clientForm.value.content || null,
           support_status:    'open',
+          support_due:       null,
+          support_ticket:    null,
+          projectidref:      null,
           client_id:         props.content?.clientId || null,
           created_at:        nowKL(),
           updated_at:        nowKL(),
