@@ -741,6 +741,12 @@ export default {
     /* ─── View mode ─── */
     const isAdmin        = computed(() => props.content?.viewMode === 'admin' || !props.content?.viewMode);
     const isClientList   = computed(() => props.content?.viewMode === 'client');
+
+    /* ─── KL timestamp (UTC+8, returns ISO string with +08:00 offset) ─── */
+    const nowKL = () => {
+      const kl = new Date(Date.now() + 8 * 3600000);
+      return kl.toISOString().replace('Z', '+08:00');
+    };
     const isSupportAdmin = computed(() => props.content?.viewMode === 'support-admin');
     const isSupportClient = computed(() => props.content?.viewMode === 'support-client');
 
@@ -765,8 +771,11 @@ export default {
     const form = ref(blankForm());
     const handleReset = () => { form.value = blankForm(); };
 
+    const editingCreatedAt = ref(null);
+
     const startEdit = (item) => {
-      editingId.value = item.id;
+      editingId.value      = item.id;
+      editingCreatedAt.value = item.created_at || null;
       form.value = {
         clientId: item.client_id ?? '', type: item.type ?? '', subtype: item.subtype ?? '',
         title: item.title ?? '', slug: item.slug ?? '', shortDescription: item.short_description ?? '',
@@ -777,7 +786,11 @@ export default {
       formVisible.value = true;
     };
 
-    const cancelEdit = () => { editingId.value = null; form.value = blankForm(); };
+    const cancelEdit = () => {
+      editingId.value = null;
+      editingCreatedAt.value = null;
+      form.value = blankForm();
+    };
 
     const handleSubmit = () => {
       /* wwEditor:start */
@@ -792,10 +805,19 @@ export default {
         support_ticket: form.value.supportTicket || null, projectidref: form.value.projectIdRef || null,
       };
       if (editingId.value) {
-        emit('trigger-event', { name: 'onUpdate', event: { value: { id: editingId.value, ...payload } } });
+        emit('trigger-event', { name: 'onUpdate', event: { value: {
+          id: editingId.value,
+          ...payload,
+          created_at: editingCreatedAt.value || nowKL(),
+          updated_at: nowKL(),
+        }}});
         cancelEdit();
       } else {
-        emit('trigger-event', { name: 'onSubmit', event: { value: payload } });
+        emit('trigger-event', { name: 'onSubmit', event: { value: {
+          ...payload,
+          created_at: nowKL(),
+          updated_at: nowKL(),
+        }}});
         form.value = blankForm();
         if (props.content?.showForm === false) formVisible.value = false;
       }
@@ -1077,6 +1099,8 @@ export default {
           support_due:       supportForm.value.support_due || null,
           support_ticket:    supportForm.value.support_ticket || null,
           client_id:         props.content?.clientId || null,
+          created_at:        nowKL(),
+          updated_at:        nowKL(),
         }},
       });
       closeSupportForm();
@@ -1130,6 +1154,8 @@ export default {
           support_status:    supportForm.value.support_status    || 'open',
           support_due:       supportForm.value.support_due       || null,
           support_ticket:    supportForm.value.support_ticket    || null,
+          created_at:        item.created_at || nowKL(),
+          updated_at:        nowKL(),
         }},
       });
       closeSupportExpand();
@@ -1154,6 +1180,8 @@ export default {
           content:           clientForm.value.content || null,
           support_status:    'open',
           client_id:         props.content?.clientId || null,
+          created_at:        nowKL(),
+          updated_at:        nowKL(),
         }},
       });
       resetClientForm();
@@ -1212,7 +1240,7 @@ export default {
       toggleSupportExpand, closeSupportExpand, saveSupportUpdate,
       stStatusLabel, stStatusClass, isOverdue,
       clientForm, resetClientForm, submitClientTicket,
-      formVisible, form, editingId,
+      formVisible, form, editingId, editingCreatedAt,
       cmsItems, clients, projects, displayItems,
       expandedId,
       submitLabel, resetLabel,
