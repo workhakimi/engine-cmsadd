@@ -489,17 +489,16 @@
         >
           <!-- Row summary -->
           <div class="gdm-st-client__ticket-row">
-            <div class="gdm-st-client__ticket-left">
+            <div class="gdm-st-client__ticket-top">
               <span class="gdm-st__badge" :class="stStatusClass(item.support_status)">{{ stStatusLabel(item.support_status) }}</span>
-              <span v-if="item.support_ticket" class="gdm-st__ticket-ref">{{ item.support_ticket }}</span>
-            </div>
-            <div class="gdm-st-client__ticket-main">
               <span class="gdm-st-client__ticket-title">{{ item.title || 'Untitled' }}</span>
-            </div>
-            <div class="gdm-st-client__ticket-right">
               <span v-if="item.subtype" class="gdm-cms__type-badge">{{ item.subtype }}</span>
+            </div>
+            <div class="gdm-st-client__ticket-foot">
+              <span v-if="item.support_ticket" class="gdm-st__ticket-ref">{{ item.support_ticket }}</span>
+              <span v-if="item.support_ticket && (getAuthorName(item) || item.created_at)" class="gdm-st-client__ticket-sep">·</span>
               <span v-if="getAuthorName(item)" class="gdm-st-client__ticket-author">{{ getAuthorName(item) }}</span>
-              <span class="gdm-st-client__ticket-date">{{ formatDate(item.created_at) }}</span>
+              <span v-if="item.created_at" class="gdm-st-client__ticket-date">{{ formatDate(item.created_at) }}</span>
             </div>
           </div>
 
@@ -1685,32 +1684,27 @@ export default {
 }
 .gdm-st-client__ticket {
   display: flex; flex-direction: column;
-  padding: 0.75rem 0; border-bottom: 1px solid #f1f5f9;
+  padding: 0.875rem 0; border-bottom: 1px solid #f1f5f9;
   &:first-of-type { border-top: 1px solid #f1f5f9; }
   &--preview { opacity: 0.75; }
 }
 .gdm-st-client__ticket-row {
-  display: flex; align-items: flex-start; gap: 0.875rem;
+  display: flex; flex-direction: column; gap: 0.35rem;
 }
-.gdm-st-client__ticket-left {
-  display: flex; flex-direction: column; gap: 0.3rem;
-  flex-shrink: 0; width: 82px;
-}
-.gdm-st-client__ticket-main {
-  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem;
+.gdm-st-client__ticket-top {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: nowrap; min-width: 0;
 }
 .gdm-st-client__ticket-title {
-  font-weight: 600; font-size: 0.875rem; color: var(--gdm-text); line-height: 1.3;
+  flex: 1; min-width: 0;
+  font-weight: 600; font-size: 0.9rem; color: var(--gdm-text); line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.gdm-st-client__ticket-desc {
-  font-size: 0.8rem; color: #64748b;
-  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+.gdm-st-client__ticket-foot {
+  display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; padding-left: 0.125rem;
 }
-.gdm-st-client__ticket-right {
-  display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; flex-shrink: 0;
-}
+.gdm-st-client__ticket-sep { color: #cbd5e1; font-size: 0.75rem; }
 .gdm-st-client__ticket-author {
-  font-size: 0.6875rem; font-weight: 500; color: #64748b;
+  font-size: 0.75rem; font-weight: 500; color: #64748b;
   &::before { content: 'by '; color: #94a3b8; font-weight: 400; }
 }
 .gdm-st-client__ticket-date { font-size: 0.75rem; color: #94a3b8; }
