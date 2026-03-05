@@ -514,7 +514,7 @@ export default {
         : data;
       if (!Array.isArray(arr)) return {};
       const map = {};
-      arr.forEach(u => { const id = u.userid ?? u.id; if (id) map[id] = u.contact_name ?? u.name ?? 'User'; });
+      arr.forEach(u => { const id = u.email ?? u.userid ?? u.id; if (id) map[id] = u.name ?? u.contact_name ?? 'User'; });
       return map;
     });
 
