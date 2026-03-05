@@ -291,8 +291,8 @@
                 </select>
               </div>
               <div class="gdm-cms__field">
-                <label class="gdm-cms__label">Category</label>
-                <input v-model="supportForm.type" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Bug, Feature Request, Support…" />
+                <label class="gdm-cms__label">Subtype</label>
+                <input v-model="supportForm.subtype" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Bug, Feature Request, Support…" />
               </div>
               <div class="gdm-cms__field">
                 <label class="gdm-cms__label">Ticket ref</label>
@@ -360,7 +360,7 @@
             <span v-if="item.support_ticket" class="gdm-st__ticket-ref">{{ item.support_ticket }}</span>
             <span class="gdm-st__ticket-title">{{ item.title || 'Untitled' }}</span>
             <div class="gdm-st__ticket-meta">
-              <span v-if="item.type" class="gdm-cms__type-badge">{{ item.type }}</span>
+              <span v-if="item.subtype" class="gdm-cms__type-badge">{{ item.subtype }}</span>
               <span
                 v-if="item.support_due"
                 class="gdm-st__ticket-due"
@@ -389,8 +389,8 @@
                   </select>
                 </div>
                 <div class="gdm-cms__field">
-                  <label class="gdm-cms__label">Category</label>
-                  <input v-model="supportForm.type" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Bug, Feature Request…" />
+                  <label class="gdm-cms__label">Subtype</label>
+                  <input v-model="supportForm.subtype" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Bug, Feature Request…" />
                 </div>
                 <div class="gdm-cms__field">
                   <label class="gdm-cms__label">Ticket ref</label>
@@ -447,8 +447,8 @@
             <input v-model="clientForm.title" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Brief description of your issue" />
           </div>
           <div class="gdm-cms__field">
-            <label class="gdm-cms__label">Category</label>
-            <select v-model="clientForm.type" class="gdm-cms__select" :style="inputBaseStyles">
+            <label class="gdm-cms__label">Subtype</label>
+            <select v-model="clientForm.subtype" class="gdm-cms__select" :style="inputBaseStyles">
               <option value="Bug">Bug / Error</option>
               <option value="Feature Request">Feature Request</option>
               <option value="Support">General Support</option>
@@ -498,7 +498,7 @@
             <span v-if="item.short_description" class="gdm-st-client__ticket-desc">{{ item.short_description }}</span>
           </div>
           <div class="gdm-st-client__ticket-right">
-            <span v-if="item.type" class="gdm-cms__type-badge">{{ item.type }}</span>
+            <span v-if="item.subtype" class="gdm-cms__type-badge">{{ item.subtype }}</span>
             <span class="gdm-st-client__ticket-date">{{ formatDate(item.created_at) }}</span>
           </div>
         </div>
@@ -962,7 +962,7 @@ export default {
 
     /* ── Shared support form ── */
     const blankSupportForm = () => ({
-      title: '', type: '', subtype: '',
+      title: '', subtype: '',
       short_description: '', content: '',
       support_status: 'open', support_due: '',
       support_ticket: '',
@@ -988,7 +988,7 @@ export default {
         name: 'onSubmit',
         event: { value: {
           title:             supportForm.value.title || null,
-          type:              supportForm.value.type || null,
+          type:              'Ticket',
           subtype:           supportForm.value.subtype || null,
           short_description: supportForm.value.short_description || null,
           content:           supportForm.value.content || null,
@@ -1015,9 +1015,8 @@ export default {
         supportFormVisible.value = false;
         supportExpandedId.value = item.id;
         supportForm.value = {
-          title:             item.title             || '',
-          type:              item.type              || '',
-          subtype:           item.subtype           || '',
+          title:             item.title   || '',
+          subtype:           item.subtype || '',
           short_description: item.short_description || '',
           content:           item.content           || '',
           support_status:    item.support_status    || 'open',
@@ -1041,7 +1040,7 @@ export default {
         event: { value: {
           id:                item.id,
           title:             supportForm.value.title             || null,
-          type:              supportForm.value.type              || null,
+          type:              'Ticket',
           subtype:           supportForm.value.subtype           || null,
           short_description: supportForm.value.short_description || null,
           content:           supportForm.value.content           || null,
@@ -1054,8 +1053,8 @@ export default {
     };
 
     /* ── Client: submit new ticket form ── */
-    const clientForm = ref({ title: '', type: 'Support', short_description: '', content: '' });
-    const resetClientForm = () => { clientForm.value = { title: '', type: 'Support', short_description: '', content: '' }; };
+    const clientForm = ref({ title: '', subtype: 'Support', short_description: '', content: '' });
+    const resetClientForm = () => { clientForm.value = { title: '', subtype: 'Support', short_description: '', content: '' }; };
 
     const submitClientTicket = () => {
       /* wwEditor:start */
@@ -1066,7 +1065,8 @@ export default {
         name: 'onSubmit',
         event: { value: {
           title:             clientForm.value.title || null,
-          type:              clientForm.value.type || 'Support',
+          type:              'Ticket',
+          subtype:           clientForm.value.subtype || null,
           short_description: clientForm.value.short_description || null,
           content:           clientForm.value.content || null,
           support_status:    'open',
