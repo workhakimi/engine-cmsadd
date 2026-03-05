@@ -62,28 +62,6 @@
                 <input v-model="form.imagelink" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="https://…" />
               </div>
             </div>
-            <div class="gdm-cms__section">
-              <p class="gdm-cms__section-label">Support</p>
-              <div class="gdm-cms__grid-2">
-                <div class="gdm-cms__field">
-                  <label class="gdm-cms__label">Due date</label>
-                  <input v-model="form.supportDue" type="date" class="gdm-cms__input" :style="inputBaseStyles" />
-                </div>
-                <div class="gdm-cms__field">
-                  <label class="gdm-cms__label">Support status</label>
-                  <select v-model="form.supportStatus" class="gdm-cms__select" :style="inputBaseStyles">
-                    <option value="">None</option>
-                    <option value="open">Open</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="closed">Closed</option>
-                  </select>
-                </div>
-                <div class="gdm-cms__field gdm-cms__field--full">
-                  <label class="gdm-cms__label">Ticket reference</label>
-                  <input v-model="form.supportTicket" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="e.g. TKT-0042" />
-                </div>
-              </div>
-            </div>
             <div v-if="projects.length > 0" class="gdm-cms__section">
               <p class="gdm-cms__section-label">Project</p>
               <div class="gdm-cms__field">
@@ -747,8 +725,7 @@ export default {
       subtype: props.content?.subtype ?? '', title: props.content?.title ?? '',
       shortDescription: props.content?.shortDescription ?? '',
       bodyContent: props.content?.content ?? '', imagelink: props.content?.imagelink ?? '',
-      supportDue: props.content?.supportDue ?? '', supportStatus: props.content?.supportStatus ?? '',
-      supportTicket: props.content?.supportTicket ?? '', projectIdRef: props.content?.projectIdRef ?? '',
+      projectIdRef: props.content?.projectIdRef ?? '',
     });
 
     const form = ref(blankForm());
@@ -762,8 +739,7 @@ export default {
       form.value = {
         clientId: item.client_id ?? '', type: item.type ?? '', subtype: item.subtype ?? '',
         title: item.title ?? '', shortDescription: item.short_description ?? '',
-        bodyContent: item.content ?? '', imagelink: item.imagelink ?? '', supportDue: item.support_due ?? '',
-        supportStatus: item.support_status ?? '', supportTicket: item.support_ticket ?? '',
+        bodyContent: item.content ?? '', imagelink: item.imagelink ?? '',
         projectIdRef: item.projectidref ?? '',
       };
       formVisible.value = true;
@@ -784,8 +760,7 @@ export default {
         subtype: form.value.subtype || null,
         short_description: form.value.shortDescription || null, content: form.value.bodyContent || null,
         client_id: form.value.clientId || props.content?.clientId || null, imagelink: form.value.imagelink || null,
-        support_due: form.value.supportDue || null, support_status: form.value.supportStatus || null,
-        support_ticket: form.value.supportTicket || null, projectidref: form.value.projectIdRef || null,
+        projectidref: form.value.projectIdRef || null,
       };
       if (editingId.value) {
         emit('trigger-event', { name: 'onUpdate', event: { value: {
