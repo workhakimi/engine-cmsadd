@@ -309,12 +309,8 @@
                 <input v-model="supportForm.title" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Brief issue subject" />
               </div>
               <div class="gdm-cms__field gdm-cms__field--full">
-                <label class="gdm-cms__label">Short description</label>
-                <textarea v-model="supportForm.short_description" class="gdm-cms__textarea" :style="inputBaseStyles" rows="2" placeholder="One-line summary" />
-              </div>
-              <div class="gdm-cms__field gdm-cms__field--full">
-                <label class="gdm-cms__label">Full details</label>
-                <textarea v-model="supportForm.content" class="gdm-cms__textarea" :style="inputBaseStyles" rows="4" placeholder="Steps to reproduce, context, screenshots…" />
+                <label class="gdm-cms__label">Details</label>
+                <textarea v-model="supportForm.content" class="gdm-cms__textarea" :style="inputBaseStyles" rows="5" placeholder="Steps to reproduce, context, screenshots…" />
               </div>
             </div>
             <div class="gdm-cms__form-actions">
@@ -408,12 +404,8 @@
                   <input v-model="supportForm.title" type="text" class="gdm-cms__input" :style="inputBaseStyles" />
                 </div>
                 <div class="gdm-cms__field gdm-cms__field--full">
-                  <label class="gdm-cms__label">Short description</label>
-                  <textarea v-model="supportForm.short_description" class="gdm-cms__textarea" :style="inputBaseStyles" rows="2" />
-                </div>
-                <div class="gdm-cms__field gdm-cms__field--full">
-                  <label class="gdm-cms__label">Full details</label>
-                  <textarea v-model="supportForm.content" class="gdm-cms__textarea" :style="inputBaseStyles" rows="4" />
+                  <label class="gdm-cms__label">Details</label>
+                  <textarea v-model="supportForm.content" class="gdm-cms__textarea" :style="inputBaseStyles" rows="5" />
                 </div>
               </div>
               <div class="gdm-cms__form-actions">
@@ -494,12 +486,8 @@
             </select>
           </div>
           <div class="gdm-cms__field gdm-cms__field--full">
-            <label class="gdm-cms__label">Brief description</label>
-            <textarea v-model="clientForm.short_description" class="gdm-cms__textarea" :style="inputBaseStyles" rows="2" placeholder="One-sentence summary of the problem" />
-          </div>
-          <div class="gdm-cms__field gdm-cms__field--full">
-            <label class="gdm-cms__label">Full details</label>
-            <textarea v-model="clientForm.content" class="gdm-cms__textarea" :style="inputBaseStyles" rows="5" placeholder="Steps to reproduce, expected vs actual behaviour, any relevant context…" />
+            <label class="gdm-cms__label">Details</label>
+            <textarea v-model="clientForm.content" class="gdm-cms__textarea" :style="inputBaseStyles" rows="6" placeholder="Steps to reproduce, expected vs actual behaviour, any relevant context…" />
           </div>
           <div class="gdm-cms__form-actions">
             <button type="submit" class="gdm-cms__btn gdm-cms__btn--primary" :disabled="!clientForm.title">
@@ -533,7 +521,6 @@
             </div>
             <div class="gdm-st-client__ticket-main">
               <span class="gdm-st-client__ticket-title">{{ item.title || 'Untitled' }}</span>
-              <span v-if="item.short_description" class="gdm-st-client__ticket-desc">{{ item.short_description }}</span>
             </div>
             <div class="gdm-st-client__ticket-right">
               <span v-if="item.subtype" class="gdm-cms__type-badge">{{ item.subtype }}</span>
@@ -1066,7 +1053,7 @@ export default {
     /* ── Shared support form ── */
     const blankSupportForm = () => ({
       title: '', subtype: '',
-      short_description: '', content: '',
+      content: '',
       support_status: 'open', support_due: '',
       support_ticket: '',
     });
@@ -1093,7 +1080,6 @@ export default {
           title:             supportForm.value.title || null,
           type:              'Ticket',
           subtype:           supportForm.value.subtype || null,
-          short_description: supportForm.value.short_description || null,
           content:           supportForm.value.content || null,
           support_status:    supportForm.value.support_status || 'open',
           support_due:       supportForm.value.support_due || null,
@@ -1122,13 +1108,12 @@ export default {
         supportFormVisible.value = false;
         supportExpandedId.value = item.id;
         supportForm.value = {
-          title:             item.title   || '',
-          subtype:           item.subtype || '',
-          short_description: item.short_description || '',
-          content:           item.content           || '',
-          support_status:    item.support_status    || 'open',
-          support_due:       toDateInput(item.support_due),
-          support_ticket:    item.support_ticket    || '',
+          title:          item.title          || '',
+          subtype:        item.subtype        || '',
+          content:        item.content        || '',
+          support_status: item.support_status || 'open',
+          support_due:    toDateInput(item.support_due),
+          support_ticket: item.support_ticket || '',
         };
       }
     };
@@ -1147,12 +1132,11 @@ export default {
         event: { value: {
           id:                item.id,
           client_id:         item.client_id || props.content?.clientId || null,
-          title:             supportForm.value.title             || null,
-          type:              'Ticket',
-          subtype:           supportForm.value.subtype           || null,
-          short_description: supportForm.value.short_description || null,
-          content:           supportForm.value.content           || null,
-          support_status:    supportForm.value.support_status    || 'open',
+          title:          supportForm.value.title          || null,
+          type:           'Ticket',
+          subtype:        supportForm.value.subtype        || null,
+          content:        supportForm.value.content        || null,
+          support_status: supportForm.value.support_status || 'open',
           support_due:       supportForm.value.support_due       || null,
           support_ticket:    supportForm.value.support_ticket    || null,
           projectidref:      item.projectidref || null,
@@ -1164,8 +1148,8 @@ export default {
     };
 
     /* ── Client: submit new ticket form ── */
-    const clientForm = ref({ title: '', subtype: 'Support', short_description: '', content: '' });
-    const resetClientForm = () => { clientForm.value = { title: '', subtype: 'Support', short_description: '', content: '' }; };
+    const clientForm = ref({ title: '', subtype: 'Support', content: '' });
+    const resetClientForm = () => { clientForm.value = { title: '', subtype: 'Support', content: '' }; };
 
     const submitClientTicket = () => {
       /* wwEditor:start */
@@ -1175,11 +1159,10 @@ export default {
       emit('trigger-event', {
         name: 'onSubmitTicket',
         event: { value: {
-          title:             clientForm.value.title || null,
-          type:              'Ticket',
-          subtype:           clientForm.value.subtype || null,
-          short_description: clientForm.value.short_description || null,
-          content:           clientForm.value.content || null,
+          title:   clientForm.value.title   || null,
+          type:    'Ticket',
+          subtype: clientForm.value.subtype || null,
+          content: clientForm.value.content || null,
           support_status:    'open',
           support_due:       null,
           support_ticket:    null,

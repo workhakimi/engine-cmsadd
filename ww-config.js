@@ -52,12 +52,12 @@ export default {
     {
       name: 'onSubmitTicket',
       label: { en: 'On submit ticket (support)' },
-      event: { value: { title: null, type: null, subtype: null, short_description: null, content: null, client_id: null, support_due: null, support_status: null, support_ticket: null, projectidref: null, created_at: null, updated_at: null } },
+      event: { value: { title: null, type: null, subtype: null, content: null, client_id: null, support_due: null, support_status: null, support_ticket: null, projectidref: null, created_at: null, updated_at: null } },
     },
     {
       name: 'onUpdateTicket',
       label: { en: 'On update ticket (support admin)' },
-      event: { value: { id: null, title: null, type: null, subtype: null, short_description: null, content: null, client_id: null, support_due: null, support_status: null, support_ticket: null, projectidref: null, created_at: null, updated_at: null } },
+      event: { value: { id: null, title: null, type: null, subtype: null, content: null, client_id: null, support_due: null, support_status: null, support_ticket: null, projectidref: null, created_at: null, updated_at: null } },
     },
   ],
   properties: {
