@@ -4,7 +4,7 @@ export default {
     icon: 'pencil',
     customSettingsPropertiesOrder: [
       'viewMode',
-      { label: 'Data', isCollapsible: true, properties: ['cmsData', 'clientsData', 'projectsData'] },
+      { label: 'Data', isCollapsible: true, properties: ['cmsData', 'clientsData', 'projectsData', 'clientId'] },
       { label: 'Comments', isCollapsible: true, properties: ['showComments', 'commsData', 'usersData', 'currentUserId'] },
       { label: 'Pre-fill / Edit', isCollapsible: true, properties: ['clientId', 'type', 'subtype', 'title', 'slug', 'shortDescription', 'content', 'imagelink', 'supportDue', 'supportStatus', 'supportTicket', 'projectIdRef'] },
       { label: 'Form settings', isCollapsible: true, properties: ['showForm', 'submitButtonText', 'showResetButton', 'resetButtonText'] },

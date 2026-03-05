@@ -787,7 +787,7 @@ export default {
         title: form.value.title || null, type: form.value.type || null,
         subtype: form.value.subtype || null, slug: form.value.slug || null,
         short_description: form.value.shortDescription || null, content: form.value.bodyContent || null,
-        client_id: form.value.clientId || null, imagelink: form.value.imagelink || null,
+        client_id: form.value.clientId || props.content?.clientId || null, imagelink: form.value.imagelink || null,
         support_due: form.value.supportDue || null, support_status: form.value.supportStatus || null,
         support_ticket: form.value.supportTicket || null, projectidref: form.value.projectIdRef || null,
       };
@@ -1076,6 +1076,7 @@ export default {
           support_status:    supportForm.value.support_status || 'open',
           support_due:       supportForm.value.support_due || null,
           support_ticket:    supportForm.value.support_ticket || null,
+          client_id:         props.content?.clientId || null,
         }},
       });
       closeSupportForm();
@@ -1120,6 +1121,7 @@ export default {
         name: 'onUpdate',
         event: { value: {
           id:                item.id,
+          client_id:         item.client_id || props.content?.clientId || null,
           title:             supportForm.value.title             || null,
           type:              'Ticket',
           subtype:           supportForm.value.subtype           || null,
@@ -1151,6 +1153,7 @@ export default {
           short_description: clientForm.value.short_description || null,
           content:           clientForm.value.content || null,
           support_status:    'open',
+          client_id:         props.content?.clientId || null,
         }},
       });
       resetClientForm();
