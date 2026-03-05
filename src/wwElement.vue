@@ -121,6 +121,7 @@
             <div v-if="item.short_description" class="gdm-cms__item-desc">{{ item.short_description }}</div>
             <div class="gdm-cms__item-footer">
               <span v-if="item.support_status" class="gdm-cms__support-badge" :class="'gdm-cms__support-badge--' + item.support_status">{{ item.support_status }}</span>
+              <span v-if="getAuthorName(item)" class="gdm-cms__item-author">{{ getAuthorName(item) }}</span>
               <span v-if="item.created_at" class="gdm-cms__item-date">{{ formatDate(item.created_at) }}</span>
             </div>
           </div>
@@ -152,6 +153,7 @@
           <!-- Row header -->
           <button type="button" class="gdm-list-row__head" @click="toggleExpand(item)">
             <span class="gdm-list-row__date">{{ formatDate(item.created_at) }}</span>
+            <span v-if="getAuthorName(item)" class="gdm-list-row__author">{{ getAuthorName(item) }}</span>
             <div class="gdm-list-row__badges">
               <span v-if="item.type" class="gdm-cms__type-badge">{{ item.type }}</span>
               <span v-if="item.subtype" class="gdm-cms__subtype-badge">{{ item.subtype }}</span>
@@ -366,6 +368,7 @@
                 class="gdm-st__ticket-due"
                 :class="{ 'gdm-st__ticket-due--overdue': isOverdue(item) }"
               >Due {{ formatDate(item.support_due) }}</span>
+              <span v-if="getAuthorName(item)" class="gdm-st__ticket-author">{{ getAuthorName(item) }}</span>
               <span class="gdm-st__ticket-date">{{ formatDate(item.created_at) }}</span>
             </div>
             <svg class="gdm-st__chevron" :class="{ 'gdm-st__chevron--open': supportExpandedId === item.id }" viewBox="0 0 16 16" fill="none">
@@ -499,6 +502,7 @@
           </div>
           <div class="gdm-st-client__ticket-right">
             <span v-if="item.subtype" class="gdm-cms__type-badge">{{ item.subtype }}</span>
+            <span v-if="getAuthorName(item)" class="gdm-st-client__ticket-author">{{ getAuthorName(item) }}</span>
             <span class="gdm-st-client__ticket-date">{{ formatDate(item.created_at) }}</span>
           </div>
         </div>
@@ -519,6 +523,7 @@
         >
           <div class="gdm-feed-item__meta">
             <span class="gdm-feed-item__date">{{ formatDate(item.created_at) }}</span>
+            <span v-if="getAuthorName(item)" class="gdm-feed-item__author">{{ getAuthorName(item) }}</span>
             <div class="gdm-feed-item__tags">
               <span v-if="item.type" class="gdm-cms__type-badge">{{ item.type }}</span>
               <span v-if="item.subtype" class="gdm-cms__subtype-badge">{{ item.subtype }}</span>
@@ -830,6 +835,13 @@ export default {
       }
     };
 
+    /* ─── Author name from author_id (email) ─── */
+    const getAuthorName = (item) => {
+      const id = item?.author_id;
+      if (!id) return '';
+      return usersMap.value[id] || '';
+    };
+
     /* ─── Comment user helpers ─── */
     const getCommentUserName = (comment) => {
       const id = comment.user_id;
@@ -1139,6 +1151,7 @@ export default {
       openComments, commentsRefs, newCommentFor,
       isCommentOpen, toggleComments,
       getItemComments, commentCountFor,
+      getAuthorName,
       getCommentUserName, commentInitials, commentAvatarColor, isOwnComment,
       currentUserInitial, formatRelDate, postComment, deleteComment,
       cssVars, cardStyles, inputBaseStyles,
@@ -1172,6 +1185,10 @@ export default {
   &--closed { background: #f0fdf4; color: #16a34a; }
 }
 .gdm-cms__item-date { font-size: 0.75rem; color: #94a3b8; }
+.gdm-cms__item-author {
+  font-size: 0.75rem; font-weight: 500; color: #64748b;
+  &::before { content: 'by '; color: #94a3b8; font-weight: 400; }
+}
 
 /* ─────────────── ADMIN ─────────────── */
 .gdm-cms__admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; gap: 1rem; }
@@ -1234,6 +1251,10 @@ export default {
 }
 .gdm-list-row__head { display: flex; align-items: center; gap: 0.75rem; width: 100%; padding: 0.75rem 0.25rem; background: none; border: none; cursor: pointer; text-align: left; color: inherit; font-family: inherit; font-size: inherit; transition: background 0.12s; pointer-events: all; &:hover { background: #f8fafc; } }
 .gdm-list-row__date { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; min-width: 6rem; flex-shrink: 0; }
+.gdm-list-row__author {
+  font-size: 0.6875rem; font-weight: 500; color: #64748b; white-space: nowrap; flex-shrink: 0;
+  &::before { content: 'by '; color: #94a3b8; font-weight: 400; }
+}
 .gdm-list-row__badges { display: flex; gap: 0.3rem; flex-shrink: 0; flex-wrap: nowrap; }
 .gdm-list-row__title { flex: 1; font-size: 0.9rem; font-weight: 500; color: var(--gdm-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .gdm-list-row__chevron { width: 16px; height: 16px; flex-shrink: 0; color: #94a3b8; transition: transform 0.2s ease; }
@@ -1248,6 +1269,10 @@ export default {
 .gdm-feed-item { padding: 1.75rem 0; &--preview { opacity: 0.75; } }
 .gdm-feed-item__meta { display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap; margin-bottom: 0.625rem; }
 .gdm-feed-item__date { font-size: 0.8rem; font-weight: 600; color: #94a3b8; letter-spacing: 0.02em; }
+.gdm-feed-item__author {
+  font-size: 0.8rem; font-weight: 500; color: #64748b;
+  &::before { content: 'by '; color: #94a3b8; font-weight: 400; }
+}
 .gdm-feed-item__tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 .gdm-feed-item__title { margin: 0 0 0.875rem; font-size: 1.125rem; font-weight: 700; line-height: 1.3; color: var(--gdm-text); }
 .gdm-feed-item__image { width: 100%; max-height: 280px; object-fit: cover; border-radius: 8px; display: block; margin-bottom: 1rem; }
@@ -1549,6 +1574,10 @@ export default {
   font-size: 0.75rem; color: #64748b;
   &--overdue { color: #ef4444; font-weight: 600; }
 }
+.gdm-st__ticket-author {
+  font-size: 0.6875rem; font-weight: 500; color: #64748b; white-space: nowrap;
+  &::before { content: 'by '; color: #94a3b8; font-weight: 400; }
+}
 .gdm-st__ticket-date { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; }
 .gdm-st__chevron {
   width: 15px; height: 15px; flex-shrink: 0; color: #94a3b8;
@@ -1615,6 +1644,10 @@ export default {
 }
 .gdm-st-client__ticket-right {
   display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; flex-shrink: 0;
+}
+.gdm-st-client__ticket-author {
+  font-size: 0.6875rem; font-weight: 500; color: #64748b;
+  &::before { content: 'by '; color: #94a3b8; font-weight: 400; }
 }
 .gdm-st-client__ticket-date { font-size: 0.75rem; color: #94a3b8; }
 
