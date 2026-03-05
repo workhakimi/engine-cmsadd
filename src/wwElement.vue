@@ -201,7 +201,7 @@
                         <span class="gdm-ec__author">{{ getCommentUserName(c) }}</span>
                         <span v-if="isOwnComment(c)" class="gdm-ec__you">you</span>
                         <span class="gdm-ec__time">{{ formatRelDate(c.created_at) }}</span>
-                        <button v-if="isAdmin && !c._p" type="button" class="gdm-ec__delete" @click="deleteComment(c)" title="Delete">✕</button>
+                        <button v-if="(isAdmin || isOwnComment(c)) && !c._p" type="button" class="gdm-ec__delete" @click="deleteComment(c)" title="Delete">✕</button>
                       </div>
                       <p class="gdm-ec__text">{{ c.message }}</p>
                     </div>
@@ -293,7 +293,7 @@
                       <span class="gdm-ec__author">{{ getCommentUserName(c) }}</span>
                       <span v-if="isOwnComment(c)" class="gdm-ec__you">you</span>
                       <span class="gdm-ec__time">{{ formatRelDate(c.created_at) }}</span>
-                      <button v-if="isAdmin && !c._p" type="button" class="gdm-ec__delete" @click="deleteComment(c)" title="Delete">✕</button>
+                      <button v-if="(isAdmin || isOwnComment(c)) && !c._p" type="button" class="gdm-ec__delete" @click="deleteComment(c)" title="Delete">✕</button>
                     </div>
                     <p class="gdm-ec__text">{{ c.message }}</p>
                   </div>
