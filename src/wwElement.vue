@@ -45,10 +45,6 @@
                   <label class="gdm-cms__label">Title <span class="gdm-cms__required">*</span></label>
                   <input v-model="form.title" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="Article title" />
                 </div>
-                <div class="gdm-cms__field gdm-cms__field--full">
-                  <label class="gdm-cms__label">Slug</label>
-                  <input v-model="form.slug" type="text" class="gdm-cms__input" :style="inputBaseStyles" placeholder="auto-generated-from-title" />
-                </div>
               </div>
             </div>
             <div class="gdm-cms__section">
@@ -749,7 +745,7 @@ export default {
     const blankForm = () => ({
       clientId: props.content?.clientId ?? '', type: props.content?.type ?? '',
       subtype: props.content?.subtype ?? '', title: props.content?.title ?? '',
-      slug: props.content?.slug ?? '', shortDescription: props.content?.shortDescription ?? '',
+      shortDescription: props.content?.shortDescription ?? '',
       bodyContent: props.content?.content ?? '', imagelink: props.content?.imagelink ?? '',
       supportDue: props.content?.supportDue ?? '', supportStatus: props.content?.supportStatus ?? '',
       supportTicket: props.content?.supportTicket ?? '', projectIdRef: props.content?.projectIdRef ?? '',
@@ -765,7 +761,7 @@ export default {
       editingCreatedAt.value = item.created_at || null;
       form.value = {
         clientId: item.client_id ?? '', type: item.type ?? '', subtype: item.subtype ?? '',
-        title: item.title ?? '', slug: item.slug ?? '', shortDescription: item.short_description ?? '',
+        title: item.title ?? '', shortDescription: item.short_description ?? '',
         bodyContent: item.content ?? '', imagelink: item.imagelink ?? '', supportDue: item.support_due ?? '',
         supportStatus: item.support_status ?? '', supportTicket: item.support_ticket ?? '',
         projectIdRef: item.projectidref ?? '',
@@ -785,7 +781,7 @@ export default {
       /* wwEditor:end */
       const payload = {
         title: form.value.title || null, type: form.value.type || null,
-        subtype: form.value.subtype || null, slug: form.value.slug || null,
+        subtype: form.value.subtype || null,
         short_description: form.value.shortDescription || null, content: form.value.bodyContent || null,
         client_id: form.value.clientId || props.content?.clientId || null, imagelink: form.value.imagelink || null,
         support_due: form.value.supportDue || null, support_status: form.value.supportStatus || null,

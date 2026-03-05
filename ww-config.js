@@ -6,7 +6,7 @@ export default {
       'viewMode',
       { label: 'Data', isCollapsible: true, properties: ['cmsData', 'clientsData', 'projectsData', 'clientId'] },
       { label: 'Comments', isCollapsible: true, properties: ['showComments', 'commsData', 'usersData', 'currentUserId'] },
-      { label: 'Pre-fill / Edit', isCollapsible: true, properties: ['clientId', 'type', 'subtype', 'title', 'slug', 'shortDescription', 'content', 'imagelink', 'supportDue', 'supportStatus', 'supportTicket', 'projectIdRef'] },
+      { label: 'Pre-fill / Edit', isCollapsible: true, properties: ['clientId', 'type', 'subtype', 'title', 'shortDescription', 'content', 'imagelink', 'supportDue', 'supportStatus', 'supportTicket', 'projectIdRef'] },
       { label: 'Form settings', isCollapsible: true, properties: ['showForm', 'submitButtonText', 'showResetButton', 'resetButtonText'] },
     ],
     customStylePropertiesOrder: [
@@ -31,13 +31,13 @@ export default {
     {
       name: 'onSubmit',
       label: { en: 'On add item' },
-      event: { value: { title: null, type: null, subtype: null, slug: null, short_description: null, content: null, client_id: null, imagelink: null, support_due: null, support_status: null, support_ticket: null, projectidref: null } },
+      event: { value: { title: null, type: null, subtype: null, short_description: null, content: null, client_id: null, imagelink: null, support_due: null, support_status: null, support_ticket: null, projectidref: null } },
       default: true,
     },
     {
       name: 'onUpdate',
       label: { en: 'On update item' },
-      event: { value: { id: null, title: null, type: null, subtype: null, slug: null, short_description: null, content: null, client_id: null, imagelink: null, support_due: null, support_status: null, support_ticket: null, projectidref: null } },
+      event: { value: { id: null, title: null, type: null, subtype: null, short_description: null, content: null, client_id: null, imagelink: null, support_due: null, support_status: null, support_ticket: null, projectidref: null } },
     },
     {
       name: 'onDeleteItem',
@@ -150,16 +150,6 @@ export default {
       defaultValue: '',
       /* wwEditor:start */
       bindingValidation: { type: 'string', tooltip: 'Pre-fill title' },
-      /* wwEditor:end */
-    },
-    slug: {
-      label: { en: 'Default slug' },
-      type: 'Text',
-      section: 'settings',
-      bindable: true,
-      defaultValue: '',
-      /* wwEditor:start */
-      bindingValidation: { type: 'string', tooltip: 'Pre-fill slug' },
       /* wwEditor:end */
     },
     shortDescription: {
