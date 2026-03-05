@@ -152,7 +152,7 @@
                 <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" class="gdm-ec__toggle-icon">
                   <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                 </svg>
-                <span>{{ commentCountFor(item.id) === 0 ? 'No comments yet' : commentCountFor(item.id) + (commentCountFor(item.id) === 1 ? ' comment' : ' comments') }}</span>
+                <span>Discussion{{ commentCountFor(item.id) > 0 ? ' · ' + commentCountFor(item.id) : '' }}</span>
                 <svg class="gdm-ec__toggle-chevron" :class="{ 'gdm-ec__toggle-chevron--open': isCommentOpen(item.id) }" viewBox="0 0 16 16" fill="none">
                   <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -163,7 +163,7 @@
                   :ref="(el) => { if (el) commentsRefs[item.id] = el; }"
                 >
                   <div v-if="getItemComments(item.id).length === 0" class="gdm-ec__empty">
-                    <p>No comments yet — be the first to add one.</p>
+                    <p>No discussion yet — be the first to start one.</p>
                   </div>
                   <div
                     v-for="c in getItemComments(item.id)"
@@ -188,7 +188,7 @@
                   <textarea
                     v-model="newCommentFor[item.id]"
                     class="gdm-ec__input"
-                    placeholder="Add a comment…"
+                    placeholder="Add to discussion…"
                     rows="1"
                     @keydown.enter.exact.prevent="postComment(item)"
                   />
@@ -392,12 +392,12 @@
             <div v-if="showComments" class="gdm-ec">
               <button type="button" class="gdm-ec__toggle" @click.stop="toggleComments(item.id)">
                 <svg viewBox="0 0 20 20" fill="none" class="gdm-ec__toggle-icon"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v7a2 2 0 01-2 2H6l-4 3V5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-                <span>{{ commentCountFor(item.id) === 0 ? 'No comments yet' : commentCountFor(item.id) + (commentCountFor(item.id) === 1 ? ' comment' : ' comments') }}</span>
+                <span>Discussion{{ commentCountFor(item.id) > 0 ? ' · ' + commentCountFor(item.id) : '' }}</span>
                 <svg class="gdm-ec__toggle-chevron" :class="{ 'gdm-ec__toggle-chevron--open': isCommentOpen(item.id) }" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
               <div v-show="isCommentOpen(item.id)" class="gdm-ec__panel">
                 <div class="gdm-ec__scroll" :ref="(el) => { if (el) commentsRefs[item.id] = el; }">
-                  <div v-if="getItemComments(item.id).length === 0" class="gdm-ec__empty"><p>No comments yet — be the first to add one.</p></div>
+                  <div v-if="getItemComments(item.id).length === 0" class="gdm-ec__empty"><p>No discussion yet — be the first to start one.</p></div>
                   <div v-for="c in getItemComments(item.id)" :key="c.id" class="gdm-ec__msg" :class="{ 'gdm-ec__msg--own': isOwnComment(c), 'gdm-ec__msg--preview': c._p }">
                     <div class="gdm-ec__avatar" :style="{ background: commentAvatarColor(c.user_id) }">{{ commentInitials(getCommentUserName(c)) }}</div>
                     <div class="gdm-ec__msg-body">
@@ -413,7 +413,7 @@
                 </div>
                 <div class="gdm-ec__compose">
                   <div class="gdm-ec__compose-avatar" :style="{ background: accent }">{{ currentUserInitial }}</div>
-                  <textarea v-model="newCommentFor[item.id]" class="gdm-ec__input" placeholder="Add a comment…" rows="1" @keydown.enter.exact.prevent="postComment(item)" />
+                  <textarea v-model="newCommentFor[item.id]" class="gdm-ec__input" placeholder="Add to discussion…" rows="1" @keydown.enter.exact.prevent="postComment(item)" />
                   <button type="button" class="gdm-ec__post-btn" :disabled="!newCommentFor[item.id] || !newCommentFor[item.id].trim()" @click="postComment(item)">
                     <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
                   </button>
@@ -481,8 +481,18 @@
           <span class="gdm-st-client__history-title">Your Tickets</span>
           <span class="gdm-cms__list-count">{{ displayItems.length }}</span>
         </div>
+
+        <!-- Search -->
+        <div class="gdm-st-client__search">
+          <svg class="gdm-st-client__search-icon" viewBox="0 0 16 16" fill="none">
+            <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 10l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input v-model="ticketSearch" type="search" class="gdm-st-client__search-input" :style="inputBaseStyles" placeholder="Search by title, ticket ref, or author…" />
+        </div>
+
         <div
-          v-for="item in displayItems"
+          v-for="item in filteredClientTickets"
           :key="item.id"
           class="gdm-st-client__ticket"
           :class="{ 'gdm-st-client__ticket--preview': item._preview }"
@@ -527,13 +537,16 @@
               </div>
               <div class="gdm-ec__compose">
                 <div class="gdm-ec__compose-avatar" :style="{ background: accent }">{{ currentUserInitial }}</div>
-                <textarea v-model="newCommentFor[item.id]" class="gdm-ec__input" placeholder="Add a comment…" rows="1" @keydown.enter.exact.prevent="postComment(item)" />
+                <textarea v-model="newCommentFor[item.id]" class="gdm-ec__input" placeholder="Add to discussion…" rows="1" @keydown.enter.exact.prevent="postComment(item)" />
                 <button type="button" class="gdm-ec__post-btn" :disabled="!newCommentFor[item.id] || !newCommentFor[item.id].trim()" @click="postComment(item)">
                   <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
                 </button>
               </div>
             </div>
           </div>
+        </div>
+        <div v-if="filteredClientTickets.length === 0 && ticketSearch" class="gdm-cms__empty" style="margin-top:0.75rem">
+          <p class="gdm-cms__empty-text">No tickets match "{{ ticketSearch }}"</p>
         </div>
       </div>
 
@@ -545,7 +558,7 @@
     <div v-else class="gdm-feed">
       <template v-if="displayItems.length > 0">
         <article
-          v-for="(item, idx) in displayItems"
+          v-for="item in displayItems"
           :key="item.id"
           class="gdm-feed-item"
           :class="{ 'gdm-feed-item--preview': item._preview }"
@@ -624,7 +637,6 @@
             </div>
           </div>
 
-          <div v-if="idx < displayItems.length - 1" class="gdm-feed-item__divider"></div>
         </article>
       </template>
       <div v-else class="gdm-cms__empty">
@@ -788,7 +800,7 @@ export default {
       /* wwEditor:start */
       if (props.wwEditorState?.isEditing) return;
       /* wwEditor:end */
-      emit('trigger-event', { name: 'onDeleteItem', event: { value: { id: item.id, title: item.title } } });
+      emit('trigger-event', { name: 'onDeleteItem', event: { value: { cms_id: item.id, title: item.title } } });
     };
 
     /* ─── Accordion expand ─── */
@@ -1004,7 +1016,7 @@ export default {
       };
     });
 
-    /* ── Filter ── */
+    /* ── Filter (admin) ── */
     const supportFilter = ref('all');
     const filteredTickets = computed(() => {
       const items = displayItems.value;
@@ -1012,6 +1024,23 @@ export default {
       return items.filter(i =>
         (i.support_status || '').toLowerCase().replace(/[\s-]/g, '_') === supportFilter.value
       );
+    });
+
+    /* ── Search (client) ── */
+    const ticketSearch = ref('');
+    const filteredClientTickets = computed(() => {
+      const q = ticketSearch.value.trim().toLowerCase();
+      const items = displayItems.value;
+      if (!q) return items;
+      return items.filter(item => {
+        const authorName = getAuthorName(item).toLowerCase();
+        return (
+          (item.title || '').toLowerCase().includes(q) ||
+          (item.support_ticket || '').toLowerCase().includes(q) ||
+          (item.author_id || '').toLowerCase().includes(q) ||
+          authorName.includes(q)
+        );
+      });
     });
 
     /* ── Shared support form ── */
@@ -1200,6 +1229,7 @@ export default {
       toggleSupportExpand, closeSupportExpand, saveSupportUpdate,
       stStatusLabel, stStatusClass, isOverdue,
       clientForm, resetClientForm, submitClientTicket,
+      ticketSearch, filteredClientTickets,
       formVisible, form, editingId, editingCreatedAt,
       cmsItems, clients, projects, displayItems,
       expandedId,
@@ -1301,15 +1331,18 @@ export default {
 .gdm-cms__item-actions { display: flex; gap: 0.375rem; flex-shrink: 0; }
 .gdm-cms__action-btn { width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.1s; background: transparent; &:active { transform: scale(0.92); } &--edit:hover { background: #eff6ff; } &--delete:hover { background: #fef2f2; } }
 
-/* ─────────────── ACCORDION LIST ─────────────── */
-.gdm-list { display: flex; flex-direction: column; width: 100%; }
+/* ─────────────── ACCORDION LIST (cards) ─────────────── */
+.gdm-list { display: flex; flex-direction: column; gap: 0.625rem; width: 100%; }
 .gdm-list-row {
-  border-bottom: 1px solid #e2e8f0;
-  &:first-child { border-top: 1px solid #e2e8f0; }
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  overflow: hidden;
   &--preview { opacity: 0.7; }
   &--expanded .gdm-list-row__chevron { transform: rotate(180deg); }
 }
-.gdm-list-row__head { display: flex; align-items: center; gap: 0.75rem; width: 100%; padding: 0.75rem 0.25rem; background: none; border: none; cursor: pointer; text-align: left; color: inherit; font-family: inherit; font-size: inherit; transition: background 0.12s; pointer-events: all; &:hover { background: #f8fafc; } }
+.gdm-list-row__head { display: flex; align-items: center; gap: 0.75rem; width: 100%; padding: 0.875rem 1rem; background: none; border: none; cursor: pointer; text-align: left; color: inherit; font-family: inherit; font-size: inherit; transition: background 0.12s; pointer-events: all; &:hover { background: #f8fafc; } }
 .gdm-list-row__date { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; min-width: 6rem; flex-shrink: 0; }
 .gdm-list-row__author {
   font-size: 0.6875rem; font-weight: 500; color: #64748b; white-space: nowrap; flex-shrink: 0;
@@ -1318,16 +1351,20 @@ export default {
 .gdm-list-row__badges { display: flex; gap: 0.3rem; flex-shrink: 0; flex-wrap: nowrap; }
 .gdm-list-row__title { flex: 1; font-size: 0.9rem; font-weight: 500; color: var(--gdm-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .gdm-list-row__chevron { width: 16px; height: 16px; flex-shrink: 0; color: #94a3b8; transition: transform 0.2s ease; }
-.gdm-list-row__body { padding: 0 0.25rem 1.25rem; border-top: 1px dashed #e2e8f0; }
+.gdm-list-row__body { padding: 0 1rem 1.25rem; border-top: 1px solid #f1f5f9; }
 .gdm-list-row__image { width: 100%; max-height: 240px; object-fit: cover; border-radius: 8px; display: block; margin: 1rem 0; }
 .gdm-list-row__desc { font-size: 0.9rem; color: #334155; line-height: 1.6; margin: 1rem 0 0.5rem; font-weight: 500; }
 .gdm-list-row__content { font-size: 0.875rem; color: #475569; line-height: 1.7; white-space: pre-wrap; margin-top: 0.5rem; }
 .gdm-list-row__empty-content { font-size: 0.8125rem; color: #94a3b8; font-style: italic; margin-top: 1rem; }
 
-/* ─────────────── SCROLL FEED ─────────────── */
-.gdm-feed { display: flex; flex-direction: column; width: 100%; }
-.gdm-feed-item { padding: 1.75rem 0; &--preview { opacity: 0.75; } }
-.gdm-feed-item__meta { display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap; margin-bottom: 0.625rem; }
+/* ─────────────── SCROLL FEED (cards) ─────────────── */
+.gdm-feed { display: flex; flex-direction: column; gap: 0.875rem; width: 100%; }
+.gdm-feed-item {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  &--preview { opacity: 0.75; }
+}
+.gdm-feed-item__meta { display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
 .gdm-feed-item__date { font-size: 0.8rem; font-weight: 600; color: #94a3b8; letter-spacing: 0.02em; }
 .gdm-feed-item__author {
   font-size: 0.8rem; font-weight: 500; color: #64748b;
@@ -1338,7 +1375,6 @@ export default {
 .gdm-feed-item__image { width: 100%; max-height: 280px; object-fit: cover; border-radius: 8px; display: block; margin-bottom: 1rem; }
 .gdm-feed-item__desc { margin: 0 0 0.625rem; font-size: 0.9375rem; color: #334155; line-height: 1.6; font-weight: 500; }
 .gdm-feed-item__body { font-size: 0.875rem; color: #475569; line-height: 1.75; white-space: pre-wrap; margin-top: 0.25rem; }
-.gdm-feed-item__divider { height: 1px; background: #e2e8f0; margin-top: 1.75rem; }
 
 /* ═══════════════════════════════════════════
    EMBEDDED COMMENTS  (.gdm-ec)
@@ -1673,19 +1709,35 @@ export default {
 .gdm-st-client__form-sub { margin: 0; font-size: 0.8125rem; color: #64748b; line-height: 1.5; }
 
 /* History */
-.gdm-st-client__history { display: flex; flex-direction: column; }
+.gdm-st-client__history { display: flex; flex-direction: column; gap: 0.625rem; }
 .gdm-st-client__history-header {
   display: flex; align-items: center; gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.25rem;
 }
 .gdm-st-client__history-title {
   font-size: 0.875rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.06em; color: #475569;
 }
+.gdm-st-client__search {
+  position: relative; display: flex; align-items: center; margin-bottom: 0.25rem;
+}
+.gdm-st-client__search-icon {
+  position: absolute; left: 0.625rem; width: 14px; height: 14px; color: #94a3b8; pointer-events: none;
+}
+.gdm-st-client__search-input {
+  width: 100%; box-sizing: border-box;
+  padding: 0.45rem 0.75rem 0.45rem 2rem;
+  border: 1.5px solid var(--gdm-input-border); border-radius: 8px;
+  font-size: 0.875rem; font-family: inherit;
+  background: var(--gdm-input-bg); color: var(--gdm-input-text); outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  &:focus { border-color: var(--gdm-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gdm-focus) 18%, transparent); }
+  &::placeholder { color: #94a3b8; }
+}
 .gdm-st-client__ticket {
   display: flex; flex-direction: column;
-  padding: 0.875rem 0; border-bottom: 1px solid #f1f5f9;
-  &:first-of-type { border-top: 1px solid #f1f5f9; }
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 1rem 1.125rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   &--preview { opacity: 0.75; }
 }
 .gdm-st-client__ticket-row {

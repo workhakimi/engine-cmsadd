@@ -41,8 +41,8 @@ export default {
     },
     {
       name: 'onDeleteItem',
-      label: { en: 'On delete item' },
-      event: { value: { id: null, title: null } },
+      label: { en: 'On delete item / ticket' },
+      event: { value: { cms_id: null, title: null } },
     },
     {
       name: 'onItemClick',
