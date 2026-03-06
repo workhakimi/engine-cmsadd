@@ -141,7 +141,13 @@
 
           <!-- Expanded body -->
           <div v-show="expandedId === item.id" class="gdm-list-row__body">
-            <img v-if="item.imagelink" :src="item.imagelink" class="gdm-list-row__image" alt="" />
+            <div v-if="item.imagelink" class="gdm-img-thumb gdm-img-thumb--list" @click="openLightbox(item.imagelink)">
+              <img :src="item.imagelink" class="gdm-list-row__image" alt="" />
+              <div class="gdm-img-thumb__overlay">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Expand image</span>
+              </div>
+            </div>
             <p v-if="item.short_description" class="gdm-list-row__desc">{{ item.short_description }}</p>
             <div v-if="item.content" class="gdm-list-row__content">{{ item.content }}</div>
             <div v-if="!item.short_description && !item.content" class="gdm-list-row__empty-content">No content available.</div>
@@ -554,7 +560,13 @@
             </div>
           </div>
           <h2 class="gdm-feed-item__title">{{ item.title || 'Untitled' }}</h2>
-          <img v-if="item.imagelink" :src="item.imagelink" class="gdm-feed-item__image" alt="" />
+          <div v-if="item.imagelink" class="gdm-img-thumb gdm-img-thumb--feed" @click="openLightbox(item.imagelink)">
+            <img :src="item.imagelink" class="gdm-feed-item__image" alt="" />
+            <div class="gdm-img-thumb__overlay">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Expand image</span>
+            </div>
+          </div>
           <p v-if="item.short_description" class="gdm-feed-item__desc">{{ item.short_description }}</p>
           <div v-if="item.content" class="gdm-feed-item__body">{{ item.content }}</div>
 
@@ -626,11 +638,19 @@
       </div>
     </div>
 
+  <!-- ── Image Lightbox ── -->
+  <div v-if="lightboxSrc" class="gdm-lightbox" @click="closeLightbox">
+    <button class="gdm-lightbox__close" @click.stop="closeLightbox" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <img :src="lightboxSrc" class="gdm-lightbox__img" alt="" @click.stop />
+  </div>
+
   </div>
 </template>
 
 <script>
-import { ref, computed, reactive, nextTick } from 'vue';
+import { ref, computed, reactive, nextTick, onMounted, onUnmounted } from 'vue';
 
 /* ─── Preview support tickets ─── */
 const PREVIEW_TICKETS = [
@@ -706,6 +726,14 @@ export default {
     /* ─── Form ─── */
     const formVisible = ref(props.content?.showForm !== false);
     const editingId   = ref(null);
+
+    /* ─── Image lightbox ─── */
+    const lightboxSrc = ref(null);
+    const openLightbox  = (src) => { lightboxSrc.value = src; };
+    const closeLightbox = ()    => { lightboxSrc.value = null; };
+    const _onKey = (e) => { if (e.key === 'Escape') closeLightbox(); };
+    onMounted(()   => window.addEventListener('keydown', _onKey));
+    onUnmounted(() => window.removeEventListener('keydown', _onKey));
 
     const toggleForm = () => {
       if (editingId.value) cancelEdit();
@@ -1226,6 +1254,7 @@ export default {
       getCommentUserName, commentInitials, commentAvatarColor, isOwnComment,
       currentUserInitial, formatRelDate, postComment, deleteComment,
       cssVars, cardStyles, inputBaseStyles,
+      lightboxSrc, openLightbox, closeLightbox,
     };
   },
 };
@@ -1333,7 +1362,7 @@ export default {
 .gdm-list-row__title { flex: 1; font-size: 0.9rem; font-weight: 500; color: var(--gdm-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .gdm-list-row__chevron { width: 16px; height: 16px; flex-shrink: 0; color: #94a3b8; transition: transform 0.2s ease; }
 .gdm-list-row__body { padding: 0 1rem 1.25rem; border-top: 1px solid #f1f5f9; }
-.gdm-list-row__image { width: 100%; max-width: 360px; height: auto; object-fit: contain; border-radius: 8px; display: block; margin: 1rem 0; background: #f8fafc; }
+.gdm-list-row__image { width: 100%; max-width: 360px; height: auto; object-fit: contain; display: block; background: #f8fafc; }
 .gdm-list-row__desc { font-size: 0.9rem; color: #334155; line-height: 1.6; margin: 1rem 0 0.5rem; font-weight: 500; }
 .gdm-list-row__content { font-size: 0.875rem; color: #475569; line-height: 1.7; white-space: pre-wrap; margin-top: 0.5rem; }
 .gdm-list-row__empty-content { font-size: 0.8125rem; color: #94a3b8; font-style: italic; margin-top: 1rem; }
@@ -1353,9 +1382,82 @@ export default {
 }
 .gdm-feed-item__tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 .gdm-feed-item__title { margin: 0 0 0.875rem; font-size: 1.125rem; font-weight: 700; line-height: 1.3; color: var(--gdm-text); }
-.gdm-feed-item__image { width: 100%; max-width: 480px; height: auto; object-fit: contain; border-radius: 8px; display: block; margin-bottom: 1rem; background: #f8fafc; }
+.gdm-feed-item__image { width: 100%; max-width: 480px; height: auto; object-fit: contain; display: block; background: #f8fafc; }
 .gdm-feed-item__desc { margin: 0 0 0.625rem; font-size: 0.9375rem; color: #334155; line-height: 1.6; font-weight: 500; }
 .gdm-feed-item__body { font-size: 0.875rem; color: #475569; line-height: 1.75; white-space: pre-wrap; margin-top: 0.25rem; }
+
+/* ─────────────── IMAGE THUMB + LIGHTBOX ─────────────── */
+.gdm-img-thumb {
+  position: relative;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  line-height: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: zoom-in;
+  &--list { margin: 1rem 0; }
+  &--feed { margin-bottom: 1rem; }
+}
+.gdm-img-thumb__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: rgba(0,0,0,0);
+  opacity: 0;
+  transition: background 0.2s ease, opacity 0.2s ease;
+  svg { width: 16px; height: 16px; flex-shrink: 0; }
+}
+.gdm-img-thumb:hover .gdm-img-thumb__overlay {
+  background: rgba(0,0,0,0.38);
+  opacity: 1;
+}
+
+/* Lightbox */
+.gdm-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  cursor: zoom-out;
+}
+.gdm-lightbox__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: background 0.2s;
+  &:hover { background: rgba(255,255,255,0.28); }
+  svg { width: 16px; height: 16px; }
+}
+.gdm-lightbox__img {
+  max-width: 90vw;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+  cursor: default;
+}
 
 /* ═══════════════════════════════════════════
    EMBEDDED COMMENTS  (.gdm-ec)
